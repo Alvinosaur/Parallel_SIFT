@@ -5,7 +5,7 @@
 We are implementing a parallel version of the SIFT algorithm to match similar localized features between two images. We will also analyze the different impacts of task-based and data-based parallelism on the SIFt algorithm. 
 
 
-Background:
+### Background:
 Matching features across two images is a common task in many computer vision applications. For instance, everything from robots to the newest iPhone uses disparity estimation to generate depth images from 2D images, similar to how humans estimate depth through two eyes. This disparity estimation attempts to align two slight shifted images through feature matching. Motion capture and optical flow similarly attempt to match two images and identify the overall displacement between these matching parts of image. 
 
 Our project will involve parallelizing an algorithm for feature-matching known as Scale Invariant Feature Transform (SIFT), which can account for rotation, illumination, and perspective change between two images. At a high level, SIFT can be broken down into a few steps:
@@ -38,11 +38,11 @@ While the SIFT algorithm is not innate sequential in nature, there needs to be a
 
 
 ### Resources
-aishack.in, aishack.in/tutorials/sift-scale-invariant-feature-transform-introduction/.
-Mordvintsev, Alexander, and Abid K. Revision. Introduction to SIFT (Scale-Invariant Feature Transform),
+- aishack.in, aishack.in/tutorials/sift-scale-invariant-feature-transform-introduction/.
+- Mordvintsev, Alexander, and Abid K. Revision. Introduction to SIFT (Scale-Invariant Feature Transform),
 opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_sift_intro/py_sift_intro.html.
-Kumar, R. , Muknahallipatna, S. and McInroy, J. (2016) An Approach to Parallelization of SIFT Algorithm on GPUs for Real-Time Applications. Journal of Computer and Communications, 4, 18-50. doi: 10.4236/jcc.2016.417002.
-"Computer Vision: Feature detection and m." UW CSE vision faculty, courses.cs.washington.edu/courses/cse455/09wi/Lects/lect6.pdf?fbclid=IwAR3F3Vs3sK0a2BtInWO8M5_NFSknCf7q857_rewX8qFlzxqN-uzb4BU0gyo.
+- Kumar, R. , Muknahallipatna, S. and McInroy, J. (2016) An Approach to Parallelization of SIFT Algorithm on GPUs for Real-Time Applications. Journal of Computer and Communications, 4, 18-50. doi: 10.4236/jcc.2016.417002.
+- "Computer Vision: Feature detection and m." UW CSE vision faculty, courses.cs.washington.edu/courses/cse455/09wi/Lects/lect6.pdf?fbclid=IwAR3F3Vs3sK0a2BtInWO8M5_NFSknCf7q857_rewX8qFlzxqN-uzb4BU0gyo.
 
 
 
@@ -63,18 +63,18 @@ Analysis the impact that different image resolution can have on SIFT algorithm
 
 
 ### Platform of Choice:
-Language: C++
-APIs: OpenMP, OpenMPI, Cuda
-Machines: Latedays Cluster (Xeon Phi Processors, NVIDIA K40 GPU)
+- Language: C++
+- APIs: OpenMP, OpenMPI, Cuda
+- Machines: Latedays Cluster (Xeon Phi Processors, NVIDIA K40 GPU)
 
 
 
 
 ### Schedule:
-November 6th: Complete sequential version of the SIFT algorithm
-November 12th: Complete implementation of data parallelism
-November 18th: Complete implementation of task parallelism
-November 24rd: Implement both data parallelism and task parallelism
-December 3rd: Achieve most speedup possible and begin final report
-December 7th: Complete script for demo
-December 9th: Project deadline
+- November 6th: Complete sequential version of the SIFT algorithm
+- November 12th: Complete implementation of data parallelism
+- November 18th: Complete implementation of task parallelism
+- November 24rd: Implement both data parallelism and task parallelism
+- December 3rd: Achieve most speedup possible and begin final report
+- December 7th: Complete script for demo
+- December 9th: Project deadline
