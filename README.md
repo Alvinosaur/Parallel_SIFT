@@ -1,8 +1,8 @@
-## Analysis of Data Parallelism and Task Parallelism on the SIFT Algorithm
+## [Analysis of Data Parallelism and Task Parallelism on the SIFT Algorithm](https://alvinosaur.github.io/Parallel_SIFT/)
 
 
 ### Summary: 
-We are implementing a parallel version of the SIFT algorithm to match similar localized features between two images. We will also analyze the different impacts of task-based and data-based parallelism on the SIFt algorithm. [Visit our Site!](https://alvinosaur.github.io/Parallel_SIFT/)
+We are implementing a parallel version of the SIFT algorithm to match similar localized features between two images. We will also analyze the different impacts of task-based and data-based parallelism on the SIFt algorithm. 
 
 
 ### Background:
