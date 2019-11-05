@@ -1,4 +1,6 @@
 import cv2
+import numpy as np
+from matplotlib import pyplot as plt
 
 """
 Set of tools to evaluate accuracy and correctness of various substeps of SIFT,
@@ -34,3 +36,14 @@ def compare_images(path1, path2, viz=False):
         cv2.destroyAllWindows()
     
     return is_same
+
+def gaussian_blur():
+    img = cv2.imread('build/pikachu.jpg')
+    blur = cv2.GaussianBlur(img,(9,9),4)
+    plt.subplot(121),plt.imshow(img),plt.title('Original')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(122),plt.imshow(blur),plt.title('Averaging')
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+gaussian_blur()

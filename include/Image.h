@@ -6,7 +6,7 @@
 
 class Image {
 public:
-    int rows, cols, num_p;
+    int rows, cols;
     // not sure whether to use RGB or grayscale
     std::vector<int> data;
     Image(int rows_x, int cols_x, int* data);

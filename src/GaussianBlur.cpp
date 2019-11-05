@@ -1,12 +1,6 @@
 #include "GaussianBlur.h"
 #include <iostream>
-
-// print vector of any type, as long as that type can be printed
-template <class data_type>
-void print_arr(std::vector<data_type> vec) {
-    for (data_type val : vec) std::cout << val << ", ";
-    std::cout << std::endl;
-}
+#include "helpers.hpp"
 
 // sigma^2 = np(1-p) = n/4 [p = 1/2 binomial distrib]
 int Gaussian_Blur::variance_to_depth(float var) {
@@ -16,13 +10,17 @@ int Gaussian_Blur::variance_to_depth(float var) {
 // Generate pascal triangle
 // Source: https://www.geeksforgeeks.org/pascal-triangle/
 void Gaussian_Blur::generate_binomial_distrib(int n, 
-        std::vector<int> & new_distrib) {
+        std::vector<float> & new_distrib) {
     // depth of n has n terms
     new_distrib.reserve(n);
     // The first value in a line is always 1 
     int val = 1;
+    std::cout << "depth: " << n << std::endl;
+    float norm = (float)(2 << n);
+    std::cout << "norm: " << norm << std::endl;
     for (int i = 1; i <= n; i++) { 
-        new_distrib.push_back(val);
+        new_distrib.push_back((float)val / norm);
+        std::cout  << val << std::endl;
         val = val * (n - i) / i;
     }
 }
@@ -38,12 +36,11 @@ int reflect(int M, int x) {
 
 void Gaussian_Blur::convolve(Image & img, float var) {
     int row, col, rows = img.rows, cols = img.cols;
-    int temp[rows * cols];  // result from vertical convolution
-    std::vector<int> distrib;  // one-dimensional binomial distribution
+    float temp[rows * cols];  // result from vertical convolution
+    std::vector<float> distrib;  // one-dimensional binomial distribution
     int depth = variance_to_depth(var);
-    int kernel_norm = 2 << depth;
     generate_binomial_distrib(depth, distrib);
-    print_arr<int>(distrib);
+    print_arr<float>(distrib);
     int K = distrib.size();
     int mean_K = K / 2;
 
@@ -56,7 +53,9 @@ void Gaussian_Blur::convolve(Image & img, float var) {
                 shift = i - mean_K;
                 y1 = reflect(rows, y + shift);
                 sum = sum + distrib[i]*img.get(y1, x);
+
             }
+            // can't optimize division at final step since integer overflow here
             temp[y*cols + x] = sum;
         }
     }
@@ -70,7 +69,7 @@ void Gaussian_Blur::convolve(Image & img, float var) {
                 x1 = reflect(cols, x + shift);
                 sum = sum + distrib[i]*temp[y*cols + x1];
             }
-            new_val = (int)((float)sum / (float)kernel_norm);
+            new_val = (uchar)(char)sum;
             img.set(y, x, new_val);
         }
     }

@@ -6,8 +6,7 @@
 Image::Image(int rows_x, int cols_x, int* data_x) : rows(rows_x), cols(cols_x)
 {
     int idx;
-    num_p = rows_x * cols_x;
-    data.reserve(num_p);
+    data.reserve(rows_x * cols_x);
     for (int r = 0; r < rows_x; r++) {
         for (int c = 0; c < cols_x; c++) {
             idx = r * cols_x + c;
