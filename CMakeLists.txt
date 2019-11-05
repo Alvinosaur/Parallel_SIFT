@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.1)
 project(Parallel_SIFT)
 
 set(CFLAGS
-    -std=c++11)
+    -std=c++11
+    -m64
+)
 
 add_compile_options(${CFLAGS})
 
