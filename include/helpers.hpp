@@ -8,8 +8,9 @@ void print_arr(std::vector<data_type> vec) {
     std::cout << std::endl;
 }
 
-int sum(std::vector<int> & vec) {
-    int total = 0;
-    for (int val : vec) total += val;
+template <class data_type>
+data_type sum(std::vector<data_type> & vec) {
+    data_type total = 0;
+    for (data_type val : vec) total += val;
     return total;
 }
