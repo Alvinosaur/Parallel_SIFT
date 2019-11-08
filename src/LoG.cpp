@@ -19,8 +19,6 @@ void LoG::create_differences(Image & img1, Image & img2, Image & res) {
         }
     }
 
-
-
 }
 
 
@@ -45,7 +43,6 @@ void LoG::get_DoG(float var, std::vector<Image> & differences) {
 		Image cur_diff;
 		create_differences(images[j], images[j +1], cur_diff);
 		differences.pushback(cur_diff);
-	
 	}
-
 }
+
