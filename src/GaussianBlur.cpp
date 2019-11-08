@@ -37,7 +37,7 @@ int reflect(int M, int x) {
     return x;
 }
 
-void Gaussian_Blur::convolve(Image & img, float var) {
+void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
     if (var == 0) {
         std::cout << "NOTE: Input variance = 0, no change to image";
         std::cout << std::endl;
@@ -81,7 +81,7 @@ void Gaussian_Blur::convolve(Image & img, float var) {
                 sum = sum + distrib[i]*temp[y*cols + x1];
             }
             new_val = (int)sum;
-            img.set(y, x, new_val);
+            new_img.set(y, x, new_val);
         }
     }
 }

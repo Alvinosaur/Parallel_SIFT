@@ -11,6 +11,12 @@ using namespace cv;
 
 
 bool debug = false;
+const std::vector<float> standard_variances({
+    (float)(pow(2, 0.5) / 2.0),
+    (float)(pow(2, 1) / 2.0),
+    (float)(pow(2, 1.5) / 2.0),
+    (float)(pow(2, 2) / 2.0)
+});
 
 void usage() {
     /*
@@ -70,15 +76,22 @@ int main(int argc, char* argv[]) {
     };
 
     Gaussian_Blur gb;
-    Mat res, src = imread(img_path.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
-    Image img(src);
-    gb.convolve(img, variance);
+    Mat res_output, src_mat = imread(img_path.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
+    Image src(src_mat);
+    Image res_var1(src_mat.rows, src_mat.cols);
+    Image res_var2(src_mat.rows, src_mat.cols);
+    Image res_var3(src_mat.rows, src_mat.cols);
+    Image res_var4(src_mat.rows, src_mat.cols);
+    gb.convolve(src, res_var1, standard_variances[0]);
+    gb.convolve(src, res_var2, standard_variances[1]);
+    gb.convolve(src, res_var3, standard_variances[2]);
+    gb.convolve(src, res_var4, standard_variances[3]);
     
     if (debug) cout << "Storing result" << endl;
-    img.store_opencv(res);
-    imwrite( "after_blur_result.jpg", res);
+    res_var4.store_opencv(res_output);
+    imwrite( "after_blur_result.jpg", res_output);
     namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
-    imshow( "Blurred pikachu!", res );
+    imshow( "Blurred pikachu!", res_output );
     waitKey(0);
 
     return 0;

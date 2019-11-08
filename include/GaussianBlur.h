@@ -17,7 +17,7 @@ class Gaussian_Blur {
 public:
     void generate_binomial_distrib(int n, std::vector<float> & new_distrib);
     int generate_kernel(std::vector<int> & kernel, float var);
-    void convolve(Image & img, float var);
+    void convolve(Image & img, Image & new_img, float var);
 };
 
 #endif
