@@ -16,6 +16,20 @@ Image::Image(int rows_x, int cols_x, int* data_x) : rows(rows_x), cols(cols_x)
     }
 }
 
+
+Image & Image::operator=(const Image & rhs) {
+    assert(this->rows == rhs.rows && this->cols == rhs.cols);
+    assert(this != &rhs);
+    int idx;
+    for (int r = 0; r < rhs.rows; r++) {
+        for (int c = 0; c < rhs.cols; c++) {
+            idx = r * rhs.cols + c;
+            this->data.push_back(rhs.data[idx]);
+        }
+    }
+    return *this;
+}
+
 Image operator-(const Image & lhs, const Image & rhs) {
     assert(lhs.rows == rhs.rows && lhs.cols == rhs.cols);
     Image subt_res(lhs.rows, lhs.cols);

@@ -1,10 +1,12 @@
-#include "GaussianBlur.h"
-#include "Image.h"
 #include <vector>
 #include <iostream>
 #include <string>
 #include <getopt.h>
 #include <opencv2/highgui/highgui.hpp>
+
+#include "GaussianBlur.h"
+#include "Image.h"
+#include "cv_helpers.hpp"
 
 using namespace std;
 using namespace cv;
@@ -15,7 +17,8 @@ const std::vector<float> standard_variances({
     (float)(pow(2, 0.5) / 2.0),
     (float)(pow(2, 1) / 2.0),
     (float)(pow(2, 1.5) / 2.0),
-    (float)(pow(2, 2) / 2.0)
+    (float)(pow(2, 2) / 2.0),
+    (float)(pow(2, 2.5) / 2.0)
 });
 
 void usage() {
@@ -82,13 +85,25 @@ int main(int argc, char* argv[]) {
     Image res_var2(src_mat.rows, src_mat.cols);
     Image res_var3(src_mat.rows, src_mat.cols);
     Image res_var4(src_mat.rows, src_mat.cols);
+    Image res_var5(src_mat.rows, src_mat.cols);
     gb.convolve(src, res_var1, standard_variances[0]);
     gb.convolve(src, res_var2, standard_variances[1]);
     gb.convolve(src, res_var3, standard_variances[2]);
     gb.convolve(src, res_var4, standard_variances[3]);
+    gb.convolve(src, res_var5, standard_variances[4]);
+
+    // for (int octave = 0; octave < 4; octave++) {
+    //     for (int scale = 1; scale <= 4; scale++) {
+    //         Image 
+    //     }
+    // }
+
+    cout << src_mat.rows << ", " << src_mat.cols << endl;
+    Image shrunk(src_mat.rows / 2, src_mat.cols / 2);
+    shrink_half(res_var1, shrunk);
     
     if (debug) cout << "Storing result" << endl;
-    res_var4.store_opencv(res_output);
+    shrunk.store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );

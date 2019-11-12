@@ -1,10 +1,12 @@
 #include "GaussianBlur.h"
 #include <iostream>
 #include <assert.h>
-#include "helpers.hpp"
+#include "general_helpers.hpp"
 
 #define DEBUG 1
 #define MAX_VARIANCE 4
+
+const float MAX_ERROR = 1e-05;
 
 // sigma^2 = np(1-p) = n/4 [p = 1/2 binomial distrib]
 int Gaussian_Blur::variance_to_depth(float var) {
@@ -24,8 +26,9 @@ void Gaussian_Blur::generate_binomial_distrib(int n,
     for (int i = 1; i <= n; i++) { 
         new_distrib.push_back((float)(val / norm));
         val = val * (n - i) / i;
+        
     }
-    if (DEBUG) assert(sum<float>(new_distrib) == 1.0);
+    if (DEBUG) assert(almost_equal(sum<float>(new_distrib), 1.0, MAX_ERROR));
 }
 
 

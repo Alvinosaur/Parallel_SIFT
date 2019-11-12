@@ -14,3 +14,8 @@ data_type sum(std::vector<data_type> & vec) {
     for (data_type val : vec) total += val;
     return total;
 }
+
+int almost_equal(float v1, float v2, float abs_error) {
+    return (v1 - v2) <= abs_error;
+}
+
