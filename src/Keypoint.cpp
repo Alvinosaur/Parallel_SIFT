@@ -57,7 +57,6 @@ void Keypoint_find(float var, std::vector<Image> & differences, std::vector<Poin
 	Image Bottom_scale = differences[var -1];
 
 
-
 	for (int i = 1; i < var -1; i++) {
 
 		std::vector<Point> keypoint_list_scale;
@@ -68,8 +67,29 @@ void Keypoint_find(float var, std::vector<Image> & differences, std::vector<Poin
 		}
 	}
 
+}
 
+
+void Keypoint_remove(float threshhold, std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total) {
+
+	for (int i = 0; i < keypoint_list_total.size(); i++) {
+
+		Image curScale = allScales[keypoint_list[i].scale_index];
+		int curRow keypoint_list[i].row , curCol = keypoint_list[i].col;
+
+		float dy = curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol);
+		float dx = curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1);
+
+
+		if (dy < threshhold | dx < threshhold) {
+			keypoint_list_total.erase(keypoint_list_total.begin() + i);
+		}
+
+	}
 
 }
 
 
+void Corner_Detection() {
+	
+}
