@@ -1,7 +1,7 @@
 #include "GaussianBlur.h"
 #include <iostream>
 #include <assert.h>
-#include "general_helpers.hpp"
+#include "general_helpers.h"
 
 #define DEBUG 1
 #define MAX_VARIANCE 4

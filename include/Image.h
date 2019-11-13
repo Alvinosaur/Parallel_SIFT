@@ -9,9 +9,11 @@ public:
     int rows, cols;
     // not sure whether to use RGB or grayscale
     std::vector<int> data;
+    Image();
     Image(int rows_x, int cols_x, int* data);
     Image(int rows_x, int cols_x);
     Image(cv::Mat & src);
+    // NOTE: Handles negative values by rounding to 0
     friend Image operator-(const Image & lhs, const Image & rhs);
     Image & operator=(const Image & rhs);
     void store_opencv(cv::Mat & dst);

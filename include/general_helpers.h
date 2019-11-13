@@ -1,5 +1,10 @@
+#ifndef _GEN_HELPERS_
+#define _GEN_HELPERS_
+
 #include <vector>
 #include <iostream>
+#include <string>
+#include <getopt.h>
 
 // print vector of any type, as long as that type can be printed
 template <class data_type>
@@ -15,7 +20,10 @@ data_type sum(std::vector<data_type> & vec) {
     return total;
 }
 
-int almost_equal(float v1, float v2, float abs_error) {
-    return (v1 - v2) <= abs_error;
-}
+int almost_equal(float v1, float v2, float abs_error);
 
+void print_usage();
+bool get_args(int argc, char** argv, std::string & img_path, float* variance, 
+        bool* debug, int* view_index);
+
+#endif

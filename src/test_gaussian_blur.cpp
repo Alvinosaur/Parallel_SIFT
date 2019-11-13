@@ -1,70 +1,19 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <getopt.h>
 #include <opencv2/highgui/highgui.hpp>
 
 #include "GaussianBlur.h"
 #include "Image.h"
-#include "cv_helpers.hpp"
+#include "cv_helpers.h"
+#include "general_helpers.h"
+#include "LoG.h"
 
 using namespace std;
 using namespace cv;
 
-
 bool debug = false;
-const std::vector<float> standard_variances({
-    (float)(pow(2, 0.5) / 2.0),
-    (float)(pow(2, 1) / 2.0),
-    (float)(pow(2, 1.5) / 2.0),
-    (float)(pow(2, 2) / 2.0),
-    (float)(pow(2, 2.5) / 2.0)
-});
-
-void usage() {
-    /*
-     * Prints out usage info for passing in commandline args for matrix
-     * generation.
-     */
-    printf("Usage:\n");
-    printf("   -h   print help message describing usage\n");
-    printf("   -d   print additional diagnostic information\n");
-    printf("   -i   path for input image\n");
-    printf("   -v   desired variance level\n");
-}
-
-bool get_args(int argc, char** argv, string & img_path, float* variance) {
-    /*
-     * Reads in input args from commandline.
-     */
-    extern char* optarg;
-    int option;
-    bool set_img_path = false;
-    while ((option = getopt(argc, argv, "hdi:v:")) != EOF) {
-        switch (option) {
-            case 'h':  // help
-                usage();
-                break;
-            case 'd':
-                debug = true;
-                break;
-            case 'i':
-                img_path = optarg;
-                set_img_path = true;
-                if (debug) printf("Input Image Path: %s\n", img_path.c_str());
-                break;
-            case 'v':
-                *variance = atof(optarg);
-                if (debug) printf("Variance: %f\n", *variance);
-                break;
-            default:
-                usage();
-                break;
-        }
-    }
-    return set_img_path;
-}
-
+int view_index = 0;
 
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
@@ -73,7 +22,7 @@ int main(int argc, char* argv[]) {
     }
     std::string img_path;
     float variance = 1;
-    if (!get_args(argc, argv, img_path, &variance)) {
+    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index)) {
         std::cout << "Failed to pass in valid image path with -i" << std::endl;
         exit(-1);
     };
@@ -92,18 +41,15 @@ int main(int argc, char* argv[]) {
     gb.convolve(src, res_var4, standard_variances[3]);
     gb.convolve(src, res_var5, standard_variances[4]);
 
-    // for (int octave = 0; octave < 4; octave++) {
-    //     for (int scale = 1; scale <= 4; scale++) {
-    //         Image 
-    //     }
-    // }
-
     cout << src_mat.rows << ", " << src_mat.cols << endl;
     Image shrunk(src_mat.rows / 2, src_mat.cols / 2);
     shrink_half(res_var1, shrunk);
+
+    Image diff = res_var1 - res_var2;
+    std::vector<Image> test{diff};
     
     if (debug) cout << "Storing result" << endl;
-    shrunk.store_opencv(res_output);
+    test[view_index].store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );

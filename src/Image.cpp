@@ -3,6 +3,8 @@
 #include <assert.h>
 #include "Image.h"
 
+Image::Image() {}
+
 Image::Image(int rows_x, int cols_x, int* data_x) : rows(rows_x), cols(cols_x)
 {
     int idx;
@@ -18,8 +20,10 @@ Image::Image(int rows_x, int cols_x, int* data_x) : rows(rows_x), cols(cols_x)
 
 
 Image & Image::operator=(const Image & rhs) {
-    assert(this->rows == rhs.rows && this->cols == rhs.cols);
     assert(this != &rhs);
+    this->rows = rhs.rows;
+    this->cols = rhs.cols;
+    this->data.reserve(rhs.rows * rhs.cols);
     int idx;
     for (int r = 0; r < rhs.rows; r++) {
         for (int c = 0; c < rhs.cols; c++) {
@@ -33,12 +37,13 @@ Image & Image::operator=(const Image & rhs) {
 Image operator-(const Image & lhs, const Image & rhs) {
     assert(lhs.rows == rhs.rows && lhs.cols == rhs.cols);
     Image subt_res(lhs.rows, lhs.cols);
-    int idx;
+    int idx, res;
     for (int r = 0; r < lhs.rows; r++) {
         for (int c = 0; c < lhs.cols; c++) {
             idx = r * lhs.cols + c;
+            res = lhs.data[idx] - rhs.data[idx];
             subt_res.data.push_back(
-                lhs.data[idx] - rhs.data[idx]);
+                (res > 0 ? res : 0));
         }
     }
     return subt_res;

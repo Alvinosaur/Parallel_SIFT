@@ -1,23 +1,19 @@
-#indef _LOG_
+#ifndef _LOG_
 #define _LOG_
 
 #include "Image.h"
-#include <vector>
-#include <utility>
 
+extern const std::vector<float> standard_variances;
 
 class LoG {
-//     std::vector<std::vector<int>> distribs;
-//     std::vector<std::vector<int>> variances;
-//     int variance_to_depth(float var);
-// public:
-//     void generate_binomial_distrib(int n, std::vector<int> & new_distrib);
-//     int generate_kernel(std::vector<int> & kernel, float var);
-//     void convolve(Image & img, float var);
+    Image orig;
 public:
-	void create_differences(Image & img1, Image & img2, Image & res);
-	void get_DoG(Image & img, float var, std::vector<Image> & differences);
-
+    LoG(Image & src);
+    void find_LoG_images(std::vector<Image> & first_octave_LoG,
+                        std::vector<Image> & second_octave_LoG, 
+                        std::vector<Image> & third_octave_LoG,
+                        std::vector<Image> & fourth_octave_LoG);
+    void create_blurs(std::vector<Image> & result, Image & src);
 };
 
 #endif

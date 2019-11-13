@@ -1,4 +1,6 @@
+#include "cv_helpers.h"
 #include "Image.h"
+#include "GaussianBlur.h"
 
 void shrink_half(Image & src, Image & dst) {
     int total_val;
@@ -10,7 +12,3 @@ void shrink_half(Image & src, Image & dst) {
         }
     }
 }
-
-// void laplacian_of_gaussian(Img & src) {
-
-// }
