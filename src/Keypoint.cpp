@@ -1,62 +1,66 @@
 #include "Keypoint.h"
+#include "general_helpers.h"
 #include <iostream>
+#include <assert.h>
 
+const int MAX_VAL = 255;
 
+void getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
+		Image & res) {
+	int r, c, r_offset, c_offset, new_r, new_c, cur_val, is_max;
+	int rows = cur_img.rows, cols = cur_img.cols;
+	for (r = 0; r < rows; r++) {
+		for (c = 0; c < cols; c++) {
+			cur_val = cur_img.get(r, c);
+			is_max = 1;
 
-int reflect(int M, int x) {
-    if(x < 0) return -x - 1;
-    if(x >= M) return 2*M - x - 1;
-    return x;
-}
+			// Iterate through a 3x3 window of neighboring pixels
+			for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
+				new_r = reflect(rows, r + r_offset);
+				for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
+					new_c = reflect(cols, c + c_offset);
 
-
-void getMaxes(Image & img1, Image & img2, Image & img3, ) {
-
-    int row, col, rows = img1.rows, cols = img1.cols;
-
-	for (int y = 0; y < rows; y++) {
-		for (int x = 0; x < cols; x++) {
-
-			x1 = reflect
-			y1 = reflect
-
-			//if this, then mark point as local max
-			if (img2.get(x1, y1) >= 0 && 
-				//previous scale
-				(img2.get(x1, y1) >= img1.get(x1-1, y1-1)) && (img2.get(x1, y1) >= img1.get(x1, y1-1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1-1)) &&
-				(img2.get(x1, y1) >= img1.get(x1-1, y1)) && (img2.get(x1, y1) >= img1.get(x1, y1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1)) &&
-				(img2.get(x1, y1) >= img1.get(x1-1, y1+1)) && (img2.get(x1, y1) >= img1.get(x1, y1+1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1+1)) &&
-				//current scale
-				(img2.get(x1, y1) >= img2.get(x1-1, y1-1)) && (img2.get(x1, y1) >= img2.get(x1, y1-1)) && (img2.get(x1, y1) >= img2.get(x1+1, y1-1)) &&
-				(img2.get(x1, y1) >= img2.get(x1-1, y1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1)) &&
-				(img2.get(x1, y1) >= img2.get(x1-1, y1+1)) && (img2.get(x1, y1) >= img2.get(x1, y1+1)) && (img2.get(x1, y1) >= img2.get(x1+1, y1+1)) &&
-				//next scale
-				(img2.get(x1, y1) >= img3.get(x1-1, y1-1)) && (img2.get(x1, y1) >= img3.get(x1, y1-1)) && (img2.get(x1, y1) >= img3.get(x1+1, y1-1)) &&
-				(img2.get(x1, y1) >= img3.get(x1-1, y1)) && (img2.get(x1, y1) >= img3.get(x1, y1)) && (img2.get(x1, y1) >=img1.get(x1+1, y1)) &&
-				(img2.get(x1, y1) >= img3.get(x1-1, y1+1)) && (img2.get(x1, y1) >= img3.get(x1, y1+1)) && (img2.get(x1, y1) >= img3.get(x1+1, y1+1)) &&
-				) {
-				//how to mark???
+					assert(0 <= new_r < rows);
+					assert(0 <= new_c < cols);
+					// compare neighbors of prev, cur, and next scales
+					is_max &= (cur_val >= prev_img.get(new_r, new_c));
+					is_max &= (cur_val >= cur_img.get(new_r, new_c));
+					is_max &= (cur_val >= next_img.get(new_r, new_c));
+				}
 			}
-
+			// set as max value if max, else set 0
+			res.data.push_back(MAX_VAL * is_max);
 		}
-
 	}
 }
 
 
-void findMax( ) {
-
+void find_keypoints(std::vector<Image> & differences, 
+		std::vector<Image> & keypoint_results) {
+	// two keypoint images
+	Image kp1(differences[0].rows, differences[0].cols);
+	Image kp2(differences[0].rows, differences[0].cols);
+	getMaxes(differences[0], differences[1], differences[2], kp1);
+	getMaxes(differences[1], differences[2], differences[3], kp2);
+	keypoint_results.push_back(kp1);
+	keypoint_results.push_back(kp2);
 }
 
+// void remove_keypoints(float threshhold, std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total) {
 
-void Keypoint_find(float var, std::vector<Image> & differences) {
+// 	for (int i = 0; i < keypoint_list_total.size(); i++) {
 
-	Image Top_scale = differences[0];
-	Image Bottom_scale = differences[var -1];
+// 		Image curScale = allScales[keypoint_list_total[i].scale_index];
+// 		int curRow keypoint_list[i].row , curCol = keypoint_list[i].col;
 
-	for (int i = 1; i < var -1; i++) {
+// 		float dy = curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol);
+// 		float dx = curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1);
 
-		getMaxes(differences[i -1], differences[i], differences[i +1], );
-	}
 
-}
+// 		if (dy < threshhold | dx < threshhold) {
+// 			keypoint_list_total.erase(keypoint_list_total.begin() + i);
+// 		}
+
+// 	}
+
+// }

@@ -22,6 +22,10 @@ data_type sum(std::vector<data_type> & vec) {
 
 int almost_equal(float v1, float v2, float abs_error);
 
+// handle edge cases where kernel exceeds image bounds
+// by having out-of-bounds pixel be pixel on opposite side of kernel
+int reflect(int M, int x);
+
 void print_usage();
 bool get_args(int argc, char** argv, std::string & img_path, float* variance, 
         bool* debug, int* view_index);

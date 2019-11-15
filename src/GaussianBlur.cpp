@@ -31,15 +31,6 @@ void Gaussian_Blur::generate_binomial_distrib(int n,
     if (DEBUG) assert(almost_equal(sum<float>(new_distrib), 1.0, MAX_ERROR));
 }
 
-
-// handle edge cases where kernel exceeds image bounds
-// by having out-of-bounds pixel be pixel on opposite side of kernel
-int reflect(int M, int x) {
-    if(x < 0) return -x - 1;
-    if(x >= M) return 2*M - x - 1;
-    return x;
-}
-
 void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
     if (var == 0) {
         std::cout << "NOTE: Input variance = 0, no change to image";

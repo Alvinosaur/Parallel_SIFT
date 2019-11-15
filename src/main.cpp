@@ -5,6 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "GaussianBlur.h"
+#include "Keypoint.h"
 #include "LoG.h"
 #include "Image.h"
 #include "cv_helpers.h"
@@ -31,12 +32,22 @@ int main(int argc, char* argv[]){
         CV_LOAD_IMAGE_GRAYSCALE);
     Image src(src_mat);
 
+    // Find Difference of Gaussian Images using LoG
     LoG LoG_processor(src);
-    std::vector<Image> octave1, octave2, octave3, octave4;
-    LoG_processor.find_LoG_images(octave1, octave2, octave3, octave4);
+    std::vector<Image> octave1_log, octave2_log, octave3_log, octave4_log;
+    LoG_processor.find_LoG_images(octave1_log, octave2_log, octave3_log, 
+        octave4_log);
+
+    // Find keypoint image-pairs between the DoG images
+    std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
+    find_keypoints(octave1_log, octave1_kp);
+    find_keypoints(octave2_log, octave2_kp);
+    find_keypoints(octave3_log, octave3_kp);
+    find_keypoints(octave4_log, octave4_kp);
     
     if (debug) cout << "Storing result" << endl;
-    octave1[view_index].store_opencv(res_output);
+    printf("%lu, %d\n", octave1_kp.size(), view_index);
+    octave1_kp[view_index].store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );

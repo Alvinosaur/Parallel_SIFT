@@ -4,6 +4,14 @@ int almost_equal(float v1, float v2, float abs_error) {
     return (v1 - v2) <= abs_error;
 }
 
+// handle edge cases where kernel exceeds image bounds
+// by having out-of-bounds pixel be pixel on opposite side of kernel
+int reflect(int M, int x) {
+    if(x < 0) return -x - 1;
+    if(x >= M) return 2*M - x - 1;
+    return x;
+}
+
 void print_usage() {
     /*
      * Prints out usage info for passing in commandline args for matrix
@@ -41,6 +49,7 @@ bool get_args(int argc, char** argv, std::string & img_path, float* variance,
                 break;
             case 'i':
                 *view_index = atoi(optarg);
+                printf("Index: %d\n", *view_index);
                 break;
             case 'v':
                 *variance = atof(optarg);
