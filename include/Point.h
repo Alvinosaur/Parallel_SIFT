@@ -9,8 +9,9 @@ public:
 	int scale_index;
     int row, col;
     // not sure whether to use RGB or grayscale
-    int value;
-    Point(int row, int col, int value);
+    int mag;
+    int ori;
+    Point(int scale_index, int row, int col, int mag, ori);
     
 };
 

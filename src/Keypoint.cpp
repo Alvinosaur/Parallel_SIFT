@@ -1,15 +1,24 @@
 #include "Keypoint.h"
 #include <iostream>
+#include <math.h>  
+
+#define PI 3.14159265
 
 
 
-int reflect(int M, int x) {
-    if(x < 0) return -x - 1;
-    if(x >= M) return 2*M - x - 1;
-    return x;
+void putBins(float mag, float ori, std::vector<float> & bins) {
+
+	int bin_index = (ori / 10);
+
+	if (bin_index == 36) {
+		bins[35] += mag;
+	} else {
+		bins[bin_index] += mag;
+	}
+
 }
 
-
+// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-keypoints/
 void getMaxes(int scaleID, Image & img1, Image & img2, Image & img3, std::vector<Point> & keypoint_list) {
 
     int row, col, rows = img1.rows, cols = img1.cols;
@@ -50,7 +59,7 @@ void getMaxes(int scaleID, Image & img1, Image & img2, Image & img3, std::vector
 }
 
 
-
+// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-keypoints/
 void Keypoint_find(float var, std::vector<Image> & differences, std::vector<Point> & keypoint_list_total) {
 
 	Image Top_scale = differences[0];
@@ -70,11 +79,15 @@ void Keypoint_find(float var, std::vector<Image> & differences, std::vector<Poin
 }
 
 
+// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-eliminate-low-contrast/
+/*
+   keypoint_list_total is the list of keypoints that remain after removing non-corner keypoints
+*/
 void Keypoint_remove(float threshhold, std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total) {
 
 	for (int i = 0; i < keypoint_list_total.size(); i++) {
 
-		Image curScale = allScales[keypoint_list[i].scale_index];
+		Image curScale = allScales[keypoint_list_total[i].scale_index];
 		int curRow keypoint_list[i].row , curCol = keypoint_list[i].col;
 
 		float dy = curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol);
@@ -90,6 +103,67 @@ void Keypoint_remove(float threshhold, std::vector<Image> & allScales, std::vect
 }
 
 
-void Corner_Detection() {
+// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-keypoint-orientation/
+/*
+   keypoint_list_total is the list of keypoints from intermediary steps
+   keypoint_list_final is the list of keypoints thats the outcome of the rotation invariance step
+*/
+void Keypoint_orientation(std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total,  std::vector<Point> & keypoint_list_final) {
+
+
+	for (int i = 0; i < keypoint_list_total.size(); i++) {
+
+		float mag, mag;
+		float max = 0;
+		std::vector<float> bins(36, 0.0);  //36 for every 10 degrees in 360
+
+		Point cur = keypoint_list_total[i];
+		int curScaleID = cur.scale_index]
+		Image curScale = allScales[curScaleID];
+		int curRow keypoint_list[i].row , curCol = keypoint_list[i].col;
+
+
+
+		for (int x = 0; x < 3; x++) {
+			for (int y = 0; y < 3; y++) {
+
+				if (!(x == 2 && y == 2)) {
+
+					mag = sqrt(  pow(curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol), 2)
+					           + pow(curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1), 2));
+					ori = atan2((curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1)) /
+			                    (curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol))) * 180 / PI;
+					
+					putBins(mag, ori, bins);
+				}
+			}
+		}
+
+		//calculate max
+		for (int b = 0; b < 36; b++) {
+			if (bins[b].mag > max) {
+				max = bins[b];
+				max_index = b;
+			}
+		}
+
+		for (int h = 0; h < 36; h++) {
+			if (bins[h] >= (max *4/5)) {
+				Point newPoint(curScaleID, curRow, curCol, bins[h], h*10);
+				keypoint_list_final.pushback(newPoint);
+			}
+		}
+
+
+
+	}
 	
 }
+
+
+
+
+
+
+
+
