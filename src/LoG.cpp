@@ -34,13 +34,15 @@ void LoG::find_LoG_images(std::vector<Image> & first_octave_LoG,
 void LoG::create_blurs(std::vector<Image> & result, Image & src) {
     Gaussian_Blur gb;
     Image temp(src.rows, src.cols);
+    Image prev_scale = src;
 
     for (float var : standard_variances) {
+        // convolve source image with some variance
         gb.convolve(src, temp, var);
-        result.push_back(src - temp);
+        // subtract from previous scale to obtain gaussian difference
+        result.push_back(prev_scale - temp);
+        prev_scale = temp;
     }
 }
 
-LoG::LoG(Image & src) {
-    orig = src;
-}
+LoG::LoG(Image & src) : orig(src) {}

@@ -5,7 +5,10 @@
 
 const int MAX_VAL = 255;
 
-void getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
+Keypoint::Keypoint(Image & src_x, float grad_thresh_x) : 
+		src(src_x), grad_thresh(grad_thresh_x) {}
+
+void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
 		Image & res) {
 	int r, c, r_offset, c_offset, new_r, new_c, cur_val, is_max;
 	int rows = cur_img.rows, cols = cur_img.cols;
@@ -29,22 +32,80 @@ void getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 				}
 			}
 			// set as max value if max, else set 0
-			res.data.push_back(MAX_VAL * is_max);
+			res.data.push_back(cur_val * is_max);
 		}
 	}
 }
 
 
-void find_keypoints(std::vector<Image> & differences, 
+void Keypoint::find_keypoints(std::vector<Image> & differences, 
 		std::vector<Image> & keypoint_results) {
 	// two keypoint images
 	Image kp1(differences[0].rows, differences[0].cols);
 	Image kp2(differences[0].rows, differences[0].cols);
 	getMaxes(differences[0], differences[1], differences[2], kp1);
 	getMaxes(differences[1], differences[2], differences[3], kp2);
+
 	keypoint_results.push_back(kp1);
 	keypoint_results.push_back(kp2);
 }
+
+bool Keypoint::is_edge(int grad_x, int grad_y) {
+	return (grad_x > grad_thresh) && (grad_y  > grad_thresh);
+}
+
+void Keypoint::find_xy_gradient(Image & remove_target, Image & grad_x_res, 
+		Image & grad_y_res, bool is_remove, std::vector<coord> keypoints) {
+	int r, c;
+	// previous and next adjacent pixel values
+	int prev_rp, next_rp, prev_cp, next_cp;
+	int grad_x, grad_y;
+	int rows = remove_target.rows, cols = remove_target.cols;
+	double avg_gradx = 0, avg_grady = 0;
+	int count = 0;
+	for (r = 0; r < rows; r++) {
+		for (c = 0; c < cols; c++) {
+			prev_rp = remove_target.get(reflect(rows, r-1), c);
+			next_rp = remove_target.get(reflect(rows, r+1), c);
+			prev_cp = remove_target.get(r, reflect(cols, c-1));
+			next_cp = remove_target.get(r, reflect(cols, c+1));
+			grad_x = next_cp - prev_cp;
+			grad_y = next_rp - prev_rp;
+
+			grad_x_res.data.push_back(abs(grad_x));
+			grad_y_res.data.push_back(abs(grad_y));
+			if (abs(grad_x) > 0 || abs(grad_y) > 0) {
+				printf("grad: %d, %d\n", grad_x, grad_y);
+				avg_gradx += grad_x;
+				avg_grady += grad_y;
+				count++;
+			}
+			if (is_remove && (!is_edge(abs(grad_x), abs(grad_y)))) {
+				remove_target.set(r, c, 0);
+				// printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n", 
+					// r, c, grad_x, grad_y);
+			} else {
+				coord new_kp(r, c);
+				keypoints.push_back(new_kp);
+			}
+		}
+	}
+	std::cout << (avg_gradx / (double)count);
+	std::cout << ", " << (avg_grady / (double)count);
+	std::cout << std::endl;
+}
+
+// void Keypoint::remove_non_keypoints(Image & target, Image & grad_x, 
+// 		Image & grad_y) {
+// 	int r, c;
+// 	int rows = src.rows, cols = src.cols;
+// 	for (r = 0; r < rows; r++) {
+// 		for (c = 0; c < cols; c++) {
+// 			if (!is_edge(grad_))
+// 		}
+// 	}
+// }
+
 
 // void remove_keypoints(float threshhold, std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total) {
 

@@ -18,11 +18,26 @@ Image::Image(int rows_x, int cols_x, int* data_x) : rows(rows_x), cols(cols_x)
     }
 }
 
+/* Copy constructor */
+Image::Image(const Image & rhs) {
+    this->rows = rhs.rows;
+    this->cols = rhs.cols;
+    this->data.reserve(rhs.rows * rhs.cols);
+    int idx;
+    for (int r = 0; r < rhs.rows; r++) {
+        for (int c = 0; c < rhs.cols; c++) {
+            idx = r * rhs.cols + c;
+            this->data.push_back(rhs.data[idx]);
+        }
+    }
+}
 
-Image & Image::operator=(const Image & rhs) {
+/* Copy operator */
+Image & Image::operator = (const Image & rhs) {
     assert(this != &rhs);
     this->rows = rhs.rows;
     this->cols = rhs.cols;
+    this->data.clear();
     this->data.reserve(rhs.rows * rhs.cols);
     int idx;
     for (int r = 0; r < rhs.rows; r++) {
@@ -43,7 +58,7 @@ Image operator-(const Image & lhs, const Image & rhs) {
             idx = r * lhs.cols + c;
             res = lhs.data[idx] - rhs.data[idx];
             subt_res.data.push_back(
-                (res > 0 ? res : 0));
+                (res > 0 ? res : -res));
         }
     }
     return subt_res;
