@@ -76,9 +76,27 @@ Analysis the impact that different image resolution can have on SIFT algorithm
 - Machines: Latedays Cluster (Xeon Phi Processors, NVIDIA K40 GPU)
 
 
+### Original Schedule (Revised/New 11/18):
+- November 22nd: Complete sequential implementation of task parallelism
+  - Hojun and Alvin will work together exclusively on finishing sequential after the Wednesday midterm
+  - We have most of the sequential done, but just need to implement the last step
+  - We will also begin data parallelization of our algorithms, which should be straightforward with double for-loops
+- November 24rd: Implement both data parallelism and task parallelism (basic versions)
+  - Hojun will focus on task parallelism. Implement at least 3x Speedup
+  - Alvin will focus on data parallelism. Implement at least 3x Speedup
+- November 28th: 
+  - If we finish extra, we will play with the MPI version, which will be straightforward since image data can be represented as a 2D array
+- December 3rd: Achieve most speedup possible (advanced parallelism) and begin final report
+  - Further develop our intial approaches and attempt hybrid of MP and MPI as well as data and task parallelism
+  - Draft Poster and necessary graphs, images for presentation
+- December 5th: Order all the necessary presentation materials
+- December 7th: Complete script for demo
+  - Clean up scripts and source code
+- December 9th: Project deadline
+  - Practice presenting material
 
 
-### Schedule:
+### Original Schedule:
 - November 6th: Complete sequential version of the SIFT algorithm
 - November 12th: Complete implementation of data parallelism
 - November 18th: Complete implementation of task parallelism
