@@ -43,19 +43,19 @@ int main(int argc, char* argv[]){
     Keypoint kp_finder(src, grad_threshold);
     std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
     kp_finder.find_keypoints(octave1_log, octave1_kp);
-    kp_finder.find_keypoints(octave2_log, octave2_kp);
-    kp_finder.find_keypoints(octave3_log, octave3_kp);
-    kp_finder.find_keypoints(octave4_log, octave4_kp);
+    // kp_finder.find_keypoints(octave2_log, octave2_kp);
+    // kp_finder.find_keypoints(octave3_log, octave3_kp);
+    // kp_finder.find_keypoints(octave4_log, octave4_kp);
     
     if (debug) cout << "Storing result" << endl;
     printf("%lu, %d\n", octave1_kp.size(), view_index);
 
     Image gradx(src.rows, src.cols), grady(src.rows, src.cols);
     std::vector<std::pair<int, int>> keypoints;
-    kp_finder.find_xy_gradient(octave1_kp[view_index], gradx, grady, 
-        true, keypoints);
+    // kp_finder.find_xy_gradient(octave1_kp[view_index], gradx, grady, 
+    //     true, keypoints);
     
-    octave1_kp[view_index].store_opencv(res_output);
+    octave1_log[view_index].store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );

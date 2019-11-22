@@ -2,6 +2,7 @@
 #include <iostream>
 #include <assert.h>
 #include "general_helpers.h"
+#include <cmath>
 
 #define DEBUG 1
 #define MAX_VARIANCE 4
@@ -10,7 +11,7 @@ const float MAX_ERROR = 1e-05;
 
 // sigma^2 = np(1-p) = n/4 [p = 1/2 binomial distrib]
 int Gaussian_Blur::variance_to_depth(float var) {
-    return (int)(var * var * 4.0);
+    return (int)ceilf(var * var * 4.0);
 }
 
 // Generate pascal triangle
@@ -19,6 +20,11 @@ void Gaussian_Blur::generate_binomial_distrib(int n,
         std::vector<float> & new_distrib) {
     // depth of n has n terms
     new_distrib.reserve(n);
+    if (n == 1) {
+        new_distrib.push_back(0.5);
+        new_distrib.push_back(0.5);
+        return;
+    }
     // The first value in a line is always 1 
     long double val = 1;
     // 2^(n-1) is sum of weights for nth level binomial distrib

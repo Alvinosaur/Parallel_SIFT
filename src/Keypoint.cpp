@@ -75,7 +75,7 @@ void Keypoint::find_xy_gradient(Image & remove_target, Image & grad_x_res,
 			grad_x_res.data.push_back(abs(grad_x));
 			grad_y_res.data.push_back(abs(grad_y));
 			if (abs(grad_x) > 0 || abs(grad_y) > 0) {
-				printf("grad: %d, %d\n", grad_x, grad_y);
+				// printf("grad: %d, %d\n", grad_x, grad_y);
 				avg_gradx += grad_x;
 				avg_grady += grad_y;
 				count++;
