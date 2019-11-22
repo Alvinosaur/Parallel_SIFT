@@ -4,7 +4,7 @@
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
 
-class Image {
+class Point {
 public:
 	int scale_index;
     int row, col;
