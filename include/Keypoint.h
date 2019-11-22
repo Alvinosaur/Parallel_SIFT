@@ -23,6 +23,6 @@ public:
 	void find_xy_gradient(Image & remove_target, Image & grad_x_res, 
 		Image & grad_y_res, bool is_remove, std::vector<coord> keypoints);
 
-	bool is_edge(int grad_x, int grad_y);
+	bool is_corner(int grad_x, int grad_y);
 };
 #endif 

@@ -10,12 +10,13 @@ Keypoint::Keypoint(Image & src_x, float grad_thresh_x) :
 
 void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
 		Image & res) {
-	int r, c, r_offset, c_offset, new_r, new_c, cur_val, is_max;
+	int r, c, r_offset, c_offset, new_r, new_c, cur_val, is_max, is_min;
 	int rows = cur_img.rows, cols = cur_img.cols;
 	for (r = 0; r < rows; r++) {
 		for (c = 0; c < cols; c++) {
 			cur_val = cur_img.get(r, c);
 			is_max = 1;
+			is_min = 1;
 
 			// Iterate through a 3x3 window of neighboring pixels
 			for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
@@ -26,13 +27,18 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 					assert(0 <= new_r < rows);
 					assert(0 <= new_c < cols);
 					// compare neighbors of prev, cur, and next scales
-					is_max &= (cur_val >= prev_img.get(new_r, new_c));
-					is_max &= (cur_val >= cur_img.get(new_r, new_c));
-					is_max &= (cur_val >= next_img.get(new_r, new_c));
+					is_max &= (cur_val > prev_img.get(new_r, new_c));
+					is_max &= (cur_val > cur_img.get(new_r, new_c));
+					is_max &= (cur_val > next_img.get(new_r, new_c));
+
+					is_min &= (cur_val < prev_img.get(new_r, new_c));
+					is_min &= (cur_val < cur_img.get(new_r, new_c));
+					is_min &= (cur_val < next_img.get(new_r, new_c));
 				}
 			}
 			// set as max value if max, else set 0
-			res.data.push_back(cur_val * is_max);
+			// if (is_max) printf("Found max: %d\n", cur_val);
+			res.data.push_back(cur_val * 70 * (is_max || is_min));
 		}
 	}
 }
@@ -50,7 +56,7 @@ void Keypoint::find_keypoints(std::vector<Image> & differences,
 	keypoint_results.push_back(kp2);
 }
 
-bool Keypoint::is_edge(int grad_x, int grad_y) {
+bool Keypoint::is_corner(int grad_x, int grad_y) {
 	return (grad_x > grad_thresh) && (grad_y  > grad_thresh);
 }
 
@@ -80,7 +86,7 @@ void Keypoint::find_xy_gradient(Image & remove_target, Image & grad_x_res,
 				avg_grady += grad_y;
 				count++;
 			}
-			if (is_remove && (!is_edge(abs(grad_x), abs(grad_y)))) {
+			if (is_remove && !(is_corner(abs(grad_x), abs(grad_y)))) {
 				remove_target.set(r, c, 0);
 				// printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n", 
 					// r, c, grad_x, grad_y);

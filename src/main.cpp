@@ -52,10 +52,10 @@ int main(int argc, char* argv[]){
 
     Image gradx(src.rows, src.cols), grady(src.rows, src.cols);
     std::vector<std::pair<int, int>> keypoints;
-    // kp_finder.find_xy_gradient(octave1_kp[view_index], gradx, grady, 
-    //     true, keypoints);
+    kp_finder.find_xy_gradient(octave1_kp[view_index], gradx, grady, 
+        true, keypoints);
     
-    octave1_log[view_index].store_opencv(res_output);
+    octave1_kp[view_index].store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );
