@@ -75,6 +75,8 @@ int main(int argc, char* argv[]) {
         exit(-1);
     };
 
+    std::cout << "running" << std::endl;
+
     Gaussian_Blur gb;
     Mat res_output, src_mat = imread(img_path.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
     Image src(src_mat);
@@ -86,7 +88,7 @@ int main(int argc, char* argv[]) {
     gb.convolve(src, res_var2, standard_variances[1]);
     gb.convolve(src, res_var3, standard_variances[2]);
     gb.convolve(src, res_var4, standard_variances[3]);
-    
+
     if (debug) cout << "Storing result" << endl;
     res_var4.store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);

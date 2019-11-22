@@ -8,10 +8,13 @@ We are implementing a parallel version of the SIFT algorithm to match similar lo
 ### How to run:
 1. Clone the repo
 2. Install [OpenCV](https://docs.opencv.org/master/df/d65/tutorial_table_of_content_introduction.html)
-3. ```cd build```
-4. ```cmake ..```
-5. ```make```
-6. ```./<executable>``` (ie: Parallel_SIFT_test_gaussian_blur)
+3. Make sure [XQuartz] is installed
+4. Open [XQuartz] terminal
+5. run "ssh -Y <username>@ghcXX.ghc.andrew.cmu.edu"
+6. ```cd build```
+7. ```cmake ..```
+8. ```make```
+9. ```./<executable>``` (ie: Parallel_SIFT_test_gaussian_blur)
 
 ### Background:
 Matching features across two images is a common task in many computer vision applications. For instance, everything from robots to the newest iPhone uses disparity estimation to generate depth images from 2D images, similar to how humans estimate depth through two eyes. This disparity estimation attempts to align two slight shifted images through feature matching. Motion capture and optical flow similarly attempt to match two images and identify the overall displacement between these matching parts of image. 

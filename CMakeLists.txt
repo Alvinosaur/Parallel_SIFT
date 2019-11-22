@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 2.8.1)
 project(Parallel_SIFT)
 
 set(CFLAGS
@@ -8,6 +8,7 @@ set(CFLAGS
 
 add_compile_options(${CFLAGS})
 
+set("OpenCV_DIR" "/usr/local/depot/opencv/share/OpenCV")
 find_package(OpenCV REQUIRED)
 
 include_directories(
