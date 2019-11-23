@@ -5,7 +5,6 @@
 
 #include "GaussianBlur.h"
 #include "Image.h"
-#include "cv_helpers.h"
 #include "general_helpers.h"
 #include "LoG.h"
 
@@ -14,6 +13,7 @@ using namespace cv;
 
 bool debug = false;
 int view_index = 0;
+float gradient_threshold = 0;
 
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
@@ -22,7 +22,8 @@ int main(int argc, char* argv[]) {
     }
     std::string img_path;
     float variance = 1;
-    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index)) {
+    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index, 
+            &gradient_threshold)) {
         std::cout << "Failed to pass in valid image path with -i" << std::endl;
         exit(-1);
     };

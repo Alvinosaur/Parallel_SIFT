@@ -8,24 +8,25 @@
 #include "Keypoint.h"
 #include "LoG.h"
 #include "Image.h"
-#include "cv_helpers.h"
 #include "general_helpers.h"
 
 using namespace std;
 
 bool debug = false;
 int view_index = 0;
-float grad_threshold = 0;
 
 int main(int argc, char* argv[]){
+    float variance = 1;
+    float grad_threshold = 0;
+    float intensity_threshold = 1;
     if (argc <= 1) {
         cout << "Need to pass in image filepath!" << endl;
         exit(-1);
     }
     std::string img_path;
-    float variance = 1;
-    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index)) {
-        std::cout << "Failed to pass in valid image path with -i" << std::endl;
+    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index, 
+            &grad_threshold)) {
+        std::cout << "Failed to pass in valid image path with -p" << std::endl;
         exit(-1);
     };
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]){
         octave4_log);
 
     // Find keypoint image-pairs between the DoG images
-    Keypoint kp_finder(src, grad_threshold);
+    Keypoint kp_finder(src, grad_threshold, intensity_threshold);
     std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
     kp_finder.find_keypoints(octave1_log, octave1_kp);
     // kp_finder.find_keypoints(octave2_log, octave2_kp);
@@ -51,11 +52,27 @@ int main(int argc, char* argv[]){
     printf("%lu, %d\n", octave1_kp.size(), view_index);
 
     Image gradx(src.rows, src.cols), grady(src.rows, src.cols);
-    std::vector<std::pair<int, int>> keypoints;
-    kp_finder.find_xy_gradient(octave1_kp[view_index], gradx, grady, 
-        true, keypoints);
+    std::vector<coord> keypoints;
+    float grad_magnitudes[src.rows * src.cols];
+    float grad_orientations[src.rows * src.cols];
+    kp_finder.find_corners_gradients(octave1_kp[view_index], keypoints,
+        grad_magnitudes, grad_orientations);
+
+    std::vector<float> kp_gradients;
+    kp_finder.find_keypoint_orientations(keypoints, grad_magnitudes, 
+        grad_orientations, kp_gradients, src.rows, src.cols);
+
+    Image keypoints_img(src.rows, src.cols);
+    kp_finder.mark_keypoints(keypoints_img, keypoints);
+    printf("Num keypoints: %lu\n", keypoints.size());
     
-    octave1_kp[view_index].store_opencv(res_output);
+    //     remove_target.set(r, c, 0);
+    //     // printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n", 
+    //         // r, c, grad_x, grad_y);
+    // } else {
+    //     remove_target.set(r, c, remove_target.get(r, c) * 70);
+    
+    keypoints_img.store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );

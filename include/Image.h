@@ -20,7 +20,7 @@ public:
     /* Copy/assignment operator */
     Image & operator=(const Image & rhs);
     void store_opencv(cv::Mat & dst);
-    int get(int row, int col);
+    int get(int row, int col) const;
     void set(int row, int col, int val);
 };
 

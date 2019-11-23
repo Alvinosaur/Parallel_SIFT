@@ -1,7 +1,7 @@
 #include "LoG.h"
 #include "Image.h"
 #include "GaussianBlur.h"
-#include "cv_helpers.h"
+#include "general_helpers.h"
 
 #include <vector>
 

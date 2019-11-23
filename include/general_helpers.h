@@ -1,10 +1,15 @@
 #ifndef _GEN_HELPERS_
 #define _GEN_HELPERS_
 
+#include <Image.h>
+
 #include <vector>
 #include <iostream>
 #include <string>
 #include <getopt.h>
+
+extern const std::vector<float> standard_variances;
+typedef std::pair<int, int> coord;
 
 // print vector of any type, as long as that type can be printed
 template <class data_type>
@@ -28,6 +33,8 @@ int reflect(int M, int x);
 
 void print_usage();
 bool get_args(int argc, char** argv, std::string & img_path, float* variance, 
-        bool* debug, int* view_index);
+        bool* debug, int* view_index, float* gradient_threshold);
+
+void shrink_half(Image & src, Image & dst);
 
 #endif
