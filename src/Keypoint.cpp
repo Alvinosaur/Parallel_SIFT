@@ -1,169 +1,142 @@
 #include "Keypoint.h"
+#include "general_helpers.h"
 #include <iostream>
-#include <math.h>  
+#include <assert.h>
+#include "CycleTimer.h"
 
-#define PI 3.14159265
+const int MAX_VAL = 255;
 
+Keypoint::Keypoint(Image & src_x, float grad_thresh_x) : 
+		src(src_x), grad_thresh(grad_thresh_x) {}
 
+void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
+		Image & res) {
+	int r, c, r_offset, c_offset, new_r, new_c, cur_val, is_max;
+	int rows = cur_img.rows, cols = cur_img.cols;
+	for (r = 0; r < rows; r++) {
+		for (c = 0; c < cols; c++) {
+			cur_val = cur_img.get(r, c);
+			is_max = 1;
 
-void putBins(float mag, float ori, std::vector<float> & bins) {
+			// Iterate through a 3x3 window of neighboring pixels
+			for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
+				new_r = reflect(rows, r + r_offset);
+				for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
+					new_c = reflect(cols, c + c_offset);
 
-	int bin_index = (ori / 10);
-
-	if (bin_index == 36) {
-		bins[35] += mag;
-	} else {
-		bins[bin_index] += mag;
-	}
-
-}
-
-// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-keypoints/
-void getMaxes(int scaleID, Image & img1, Image & img2, Image & img3, std::vector<Point> & keypoint_list) {
-
-    int row, col, rows = img1.rows, cols = img1.cols;
-
-	for (int y = 1; y < rows - 1; y++) {
-		for (int x = 1; x < cols - 1; x++) {
-
-			// x1 = reflect
-			// y1 = reflect
-
-			//if this, then mark point as local max
-			if (img2.get(x1, y1) >= 0 && 
-				//previous scale
-				(img2.get(x1, y1) >= img1.get(x1-1, y1-1)) && (img2.get(x1, y1) >= img1.get(x1, y1-1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1-1)) &&
-				(img2.get(x1, y1) >= img1.get(x1-1, y1)) && (img2.get(x1, y1) >= img1.get(x1, y1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1)) &&
-				(img2.get(x1, y1) >= img1.get(x1-1, y1+1)) && (img2.get(x1, y1) >= img1.get(x1, y1+1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1+1)) &&
-				//current scale
-				(img2.get(x1, y1) >= img2.get(x1-1, y1-1)) && (img2.get(x1, y1) >= img2.get(x1, y1-1)) && (img2.get(x1, y1) >= img2.get(x1+1, y1-1)) &&
-				(img2.get(x1, y1) >= img2.get(x1-1, y1)) && (img2.get(x1, y1) >= img1.get(x1+1, y1)) &&
-				(img2.get(x1, y1) >= img2.get(x1-1, y1+1)) && (img2.get(x1, y1) >= img2.get(x1, y1+1)) && (img2.get(x1, y1) >= img2.get(x1+1, y1+1)) &&
-				//next scale
-				(img2.get(x1, y1) >= img3.get(x1-1, y1-1)) && (img2.get(x1, y1) >= img3.get(x1, y1-1)) && (img2.get(x1, y1) >= img3.get(x1+1, y1-1)) &&
-				(img2.get(x1, y1) >= img3.get(x1-1, y1)) && (img2.get(x1, y1) >= img3.get(x1, y1)) && (img2.get(x1, y1) >=img1.get(x1+1, y1)) &&
-				(img2.get(x1, y1) >= img3.get(x1-1, y1+1)) && (img2.get(x1, y1) >= img3.get(x1, y1+1)) && (img2.get(x1, y1) >= img3.get(x1+1, y1+1)) &&
-				) {
-				//how to mark???
-
-				Point cur;
-				cur.scaleID = scaleID;
-				cur.row = x1, cur.col = y1;
-
-				keypoint_list.pushback(cur);
-			}
-
-		}
-
-	}
-}
-
-
-// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-keypoints/
-void Keypoint_find(float var, std::vector<Image> & differences, std::vector<Point> & keypoint_list_total) {
-
-	Image Top_scale = differences[0];
-	Image Bottom_scale = differences[var -1];
-
-
-	for (int i = 1; i < var -1; i++) {
-
-		std::vector<Point> keypoint_list_scale;
-		getMaxes(differences[i -1], differences[i], differences[i +1], keypoint_list_scale);
-
-		for (int j = 0; j < keypoint_list_scale.size(); j++) {
-			keypoint_list_total.pushback(keypoint_list_scale[j]);
-		}
-	}
-
-}
-
-
-// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-eliminate-low-contrast/
-/*
-   keypoint_list_total is the list of keypoints that remain after removing non-corner keypoints
-*/
-void Keypoint_remove(float threshhold, std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total) {
-
-	for (int i = 0; i < keypoint_list_total.size(); i++) {
-
-		Image curScale = allScales[keypoint_list_total[i].scale_index];
-		int curRow keypoint_list[i].row , curCol = keypoint_list[i].col;
-
-		float dy = curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol);
-		float dx = curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1);
-
-
-		if (dy < threshhold | dx < threshhold) {
-			keypoint_list_total.erase(keypoint_list_total.begin() + i);
-		}
-
-	}
-
-}
-
-
-// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-keypoint-orientation/
-/*
-   keypoint_list_total is the list of keypoints from intermediary steps
-   keypoint_list_final is the list of keypoints thats the outcome of the rotation invariance step
-*/
-void Keypoint_orientation(std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total,  std::vector<Point> & keypoint_list_final) {
-
-
-	for (int i = 0; i < keypoint_list_total.size(); i++) {
-
-		float mag, mag;
-		float max = 0;
-		std::vector<float> bins(36, 0.0);  //36 for every 10 degrees in 360
-
-		Point cur = keypoint_list_total[i];
-		int curScaleID = cur.scale_index]
-		Image curScale = allScales[curScaleID];
-		int curRow keypoint_list[i].row , curCol = keypoint_list[i].col;
-
-
-
-		for (int x = 0; x < 3; x++) {
-			for (int y = 0; y < 3; y++) {
-
-				if (!(x == 2 && y == 2)) {
-
-					mag = sqrt(  pow(curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol), 2)
-					           + pow(curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1), 2));
-					ori = atan2((curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1)) /
-			                    (curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol))) * 180 / PI;
-					
-					putBins(mag, ori, bins);
+					assert(0 <= new_r < rows);
+					assert(0 <= new_c < cols);
+					// compare neighbors of prev, cur, and next scales
+					is_max &= (cur_val >= prev_img.get(new_r, new_c));
+					is_max &= (cur_val >= cur_img.get(new_r, new_c));
+					is_max &= (cur_val >= next_img.get(new_r, new_c));
 				}
 			}
+			// set as max value if max, else set 0
+			res.data.push_back(cur_val * is_max);
 		}
-
-		//calculate max
-		for (int b = 0; b < 36; b++) {
-			if (bins[b].mag > max) {
-				max = bins[b];
-				max_index = b;
-			}
-		}
-
-		for (int h = 0; h < 36; h++) {
-			if (bins[h] >= (max *4/5)) {
-				Point newPoint(curScaleID, curRow, curCol, bins[h], h*10);
-				keypoint_list_final.pushback(newPoint);
-			}
-		}
-
-
-
 	}
-	
+}
+
+
+double Keypoint::find_keypoints(std::vector<Image> & differences, 
+		std::vector<Image> & keypoint_results) {
+	// two keypoint images
+    double startTime = CycleTimer::currentSeconds();
+
+	Image kp1(differences[0].rows, differences[0].cols);
+	Image kp2(differences[0].rows, differences[0].cols);
+	getMaxes(differences[0], differences[1], differences[2], kp1);
+	getMaxes(differences[1], differences[2], differences[3], kp2);
+
+	keypoint_results.push_back(kp1);
+	keypoint_results.push_back(kp2);
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
 
 
+bool Keypoint::is_edge(int grad_x, int grad_y) {
+	return (grad_x > grad_thresh) && (grad_y  > grad_thresh);
+}
+
+double Keypoint::find_xy_gradient(Image & remove_target, Image & grad_x_res, 
+		Image & grad_y_res, bool is_remove, std::vector<coord> keypoints) {
+	int r, c;
+	// previous and next adjacent pixel values
+	double startTime = CycleTimer::currentSeconds();
+
+	int prev_rp, next_rp, prev_cp, next_cp;
+	int grad_x, grad_y;
+	int rows = remove_target.rows, cols = remove_target.cols;
+	double avg_gradx = 0, avg_grady = 0;
+	int count = 0;
+	for (r = 0; r < rows; r++) {
+		for (c = 0; c < cols; c++) {
+			prev_rp = remove_target.get(reflect(rows, r-1), c);
+			next_rp = remove_target.get(reflect(rows, r+1), c);
+			prev_cp = remove_target.get(r, reflect(cols, c-1));
+			next_cp = remove_target.get(r, reflect(cols, c+1));
+			grad_x = next_cp - prev_cp;
+			grad_y = next_rp - prev_rp;
+
+			grad_x_res.data.push_back(abs(grad_x));
+			grad_y_res.data.push_back(abs(grad_y));
+			if (abs(grad_x) > 0 || abs(grad_y) > 0) {
+				// printf("grad: %d, %d\n", grad_x, grad_y);
+				avg_gradx += grad_x;
+				avg_grady += grad_y;
+				count++;
+			}
+			if (is_remove && (!is_edge(abs(grad_x), abs(grad_y)))) {
+				remove_target.set(r, c, 0);
+				// printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n", 
+					// r, c, grad_x, grad_y);
+			} else {
+				coord new_kp(r, c);
+				keypoints.push_back(new_kp);
+			}
+		}
+	}
+	std::cout << (avg_gradx / (double)count);
+	std::cout << ", " << (avg_grady / (double)count);
+	std::cout << std::endl;
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
+}
+
+// void Keypoint::remove_non_keypoints(Image & target, Image & grad_x, 
+// 		Image & grad_y) {
+// 	int r, c;
+// 	int rows = src.rows, cols = src.cols;
+// 	for (r = 0; r < rows; r++) {
+// 		for (c = 0; c < cols; c++) {
+// 			if (!is_edge(grad_))
+// 		}
+// 	}
+// }
 
 
+// void remove_keypoints(float threshhold, std::vector<Image> & allScales, std::vector<Point> & keypoint_list_total) {
+
+// 	for (int i = 0; i < keypoint_list_total.size(); i++) {
+
+// 		Image curScale = allScales[keypoint_list_total[i].scale_index];
+// 		int curRow keypoint_list[i].row , curCol = keypoint_list[i].col;
+
+// 		float dy = curScale.get(curRow - 1, curCol) - curScale.get(curRow + 1, curCol);
+// 		float dx = curScale.get(curRow, curCol - 1) - curScale.get(curRow, curCol + 1);
 
 
+// 		if (dy < threshhold | dx < threshhold) {
+// 			keypoint_list_total.erase(keypoint_list_total.begin() + i);
+// 		}
 
+// 	}
+
+// }

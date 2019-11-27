@@ -1,23 +1,28 @@
-#indef _KEY_
+#ifndef _KEY_
 #define _KEY_
 
 #include "Image.h"
 #include <vector>
 #include <utility>
 
+// discrete bins of histogram as a discrete range of angles
+extern const std::vector<float> angle_bins;
 
-class KEY {
-//     std::vector<std::vector<int>> distribs;
-//     std::vector<std::vector<int>> variances;
-//     int variance_to_depth(float var);
-// public:
-//     void generate_binomial_distrib(int n, std::vector<int> & new_distrib);
-//     int generate_kernel(std::vector<int> & kernel, float var);
-//     void convolve(Image & img, float var);
+class Keypoint {
+    Image src;
+	float grad_thresh;
+	typedef std::pair<int, int> coord;
 public:
-	void findKeypoint(Image & img1, Image & img2, Image & img3, );
-	void findMax(std::vector<int> & points, );
+    Keypoint(Image & src, float grad_thresh_x);
+	void getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
+	Image & res);
 
+	double find_keypoints(std::vector<Image> & differences, 
+		std::vector<Image> & keypoint_results);
+
+	double find_xy_gradient(Image & remove_target, Image & grad_x_res, 
+		Image & grad_y_res, bool is_remove, std::vector<coord> keypoints);
+
+	bool is_edge(int grad_x, int grad_y);
 };
-
 #endif 
