@@ -19,10 +19,10 @@ public:
 	void getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
 	Image & res);
 
-	void find_keypoints(std::vector<Image> & differences, 
+	double find_keypoints(std::vector<Image> & differences, 
 		std::vector<Image> & keypoint_results);
 
-	void find_corners_gradients(const Image & src, 
+	double find_corners_gradients(const Image & src, 
 		std::vector<coord> & keypoints, float* grad_magnitudes, 
 		float* grad_orientations);
 

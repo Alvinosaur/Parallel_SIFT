@@ -34,16 +34,28 @@ int main(int argc, char* argv[]){
         CV_LOAD_IMAGE_GRAYSCALE);
     Image src(src_mat);
 
+    ///////////////////////////////////// Algorithm BEGIN /////////////////////////////////////
+    double SIFT_TIME = 50000.;
+
+    ///////////////////////////////////// LoG BEGIN /////////////////////////////////////
     // Find Difference of Gaussian Images using LoG
     LoG LoG_processor(src);
     std::vector<Image> octave1_log, octave2_log, octave3_log, octave4_log;
-    LoG_processor.find_LoG_images(octave1_log, octave2_log, octave3_log, 
-        octave4_log);
 
+    SIFT_TIME = std::min(SIFT_TIME, LoG_processor.find_LoG_images(
+        octave1_log, octave2_log, octave3_log, octave4_log));
+    printf("LoG process time: %.3f ms\n", 1000.f * SIFT_TIME);
+    ///////////////////////////////////// LoG END /////////////////////////////////////
+
+
+    ///////////////////////////////////// Keypoint begin /////////////////////////////////////
     // Find keypoint image-pairs between the DoG images
     Keypoint kp_finder(src, grad_threshold, intensity_threshold);
     std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
-    kp_finder.find_keypoints(octave1_log, octave1_kp);
+
+    SIFT_TIME = std::min(SIFT_TIME, kp_finder.find_keypoints(octave1_log, octave1_kp));
+    printf("keypoint_find for octave1 time: %.3f ms\n", 1000.f * SIFT_TIME);
+    // kp_finder.find_keypoints(octave1_log, octave1_kp);
     // kp_finder.find_keypoints(octave2_log, octave2_kp);
     // kp_finder.find_keypoints(octave3_log, octave3_kp);
     // kp_finder.find_keypoints(octave4_log, octave4_kp);
@@ -55,8 +67,12 @@ int main(int argc, char* argv[]){
     std::vector<coord> keypoints;
     float grad_magnitudes[src.rows * src.cols];
     float grad_orientations[src.rows * src.cols];
-    kp_finder.find_corners_gradients(octave1_kp[view_index], keypoints,
-        grad_magnitudes, grad_orientations);
+
+
+    SIFT_TIME = std::min(SIFT_TIME, kp_finder.find_corners_gradients(
+        octave1_kp[view_index], keypoints,grad_magnitudes, grad_orientations));
+    printf("corner detection for octave1 time: %.3f ms\n", 1000.f * SIFT_TIME);
+    
 
     std::vector<float> kp_gradients;
     kp_finder.find_keypoint_orientations(keypoints, grad_magnitudes, 
@@ -74,7 +90,7 @@ int main(int argc, char* argv[]){
     
     keypoints_img.store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
-    cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
+    // cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );
     cv::waitKey(0);
     return 0;

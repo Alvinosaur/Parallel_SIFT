@@ -9,7 +9,7 @@ class LoG {
     Image orig;
 public:
     LoG(Image & src);
-    void find_LoG_images(std::vector<Image> & first_octave_LoG,
+    double find_LoG_images(std::vector<Image> & first_octave_LoG,
                         std::vector<Image> & second_octave_LoG, 
                         std::vector<Image> & third_octave_LoG,
                         std::vector<Image> & fourth_octave_LoG);

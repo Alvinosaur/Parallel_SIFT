@@ -3,6 +3,8 @@
 #include <iostream>
 #include <assert.h>
 #include <cmath>
+#include "CycleTimer.h"
+
 
 #define NUM_REGIONS 16
 #define NUM_BINS 8
@@ -70,8 +72,11 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 }
 
 
-void Keypoint::find_keypoints(std::vector<Image> & differences, 
+double Keypoint::find_keypoints(std::vector<Image> & differences, 
 		std::vector<Image> & keypoint_results) {
+
+	double startTime = CycleTimer::currentSeconds();
+
 	// two keypoint images
 	Image kp1(differences[0].rows, differences[0].cols);
 	Image kp2(differences[0].rows, differences[0].cols);
@@ -80,6 +85,10 @@ void Keypoint::find_keypoints(std::vector<Image> & differences,
 
 	keypoint_results.push_back(kp1);
 	keypoint_results.push_back(kp2);
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
 // void Keypoint::filter_keypoints(std::)
@@ -99,9 +108,13 @@ void Keypoint::mark_keypoints(Image & src, std::vector<coord> & keypoints) {
 	}
 }
 
-void Keypoint::find_corners_gradients(
+double Keypoint::find_corners_gradients(
 		const Image & src, std::vector<coord> & keypoints,
 		float* grad_magnitudes, float* grad_orientations) {
+
+	double startTime = CycleTimer::currentSeconds();
+
+
 	int r, c;
 	// previous and next adjacent pixel values
 	int prev_rp, next_rp, prev_cp, next_cp;
@@ -139,6 +152,10 @@ void Keypoint::find_corners_gradients(
 	std::cout << (avg_gradx / (double)count);
 	std::cout << ", " << (avg_grady / (double)count);
 	std::cout << std::endl;
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
 int squared_dist(int x, int y) {
