@@ -9,6 +9,8 @@
 #include "LoG.h"
 #include "Image.h"
 #include "general_helpers.h"
+#include <omp.h>
+
 
 using namespace std;
 
