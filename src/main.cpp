@@ -70,15 +70,12 @@ int main(int argc, char* argv[]){
     float grad_magnitudes[src.rows * src.cols];
     float grad_orientations[src.rows * src.cols];
 
-
+    std::vector<PointWithAngle> points_with_angle;
     SIFT_TIME = std::min(SIFT_TIME, kp_finder.find_corners_gradients(
-        octave1_kp[view_index], keypoints,grad_magnitudes, grad_orientations));
+        octave1_kp[view_index], keypoints, points_with_angle));
     printf("corner detection for octave1 time: %.3f ms\n", 1000.f * SIFT_TIME);
-    
 
     std::vector<float> kp_gradients;
-    kp_finder.find_keypoint_orientations(keypoints, grad_magnitudes, 
-        grad_orientations, kp_gradients, src.rows, src.cols);
 
     Image keypoints_img(src.rows, src.cols);
     kp_finder.mark_keypoints(keypoints_img, keypoints);
