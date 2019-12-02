@@ -55,12 +55,11 @@ int main(int argc, char* argv[]){
     std::vector<coord> keypoints;
     float grad_magnitudes[src.rows * src.cols];
     float grad_orientations[src.rows * src.cols];
+    std::vector<PointWithAngle> points_with_angle;
     kp_finder.find_corners_gradients(octave1_kp[view_index], keypoints,
-        grad_magnitudes, grad_orientations);
+        points_with_angle);
 
     std::vector<float> kp_gradients;
-    kp_finder.find_keypoint_orientations(keypoints, grad_magnitudes, 
-        grad_orientations, kp_gradients, src.rows, src.cols);
 
     Image keypoints_img(src.rows, src.cols);
     kp_finder.mark_keypoints(keypoints_img, keypoints);

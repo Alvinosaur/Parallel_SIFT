@@ -5,7 +5,9 @@
 #include <cmath>
 
 #define NUM_REGIONS 16
+#define NUM_REGIONS_SQRT 4
 #define NUM_BINS 8
+#define RAD_TO_DEG ((float)180 / M_PI)
 
 const int MAX_VAL = 255;
 
@@ -101,7 +103,7 @@ void Keypoint::mark_keypoints(Image & src, std::vector<coord> & keypoints) {
 
 void Keypoint::find_corners_gradients(
 		const Image & src, std::vector<coord> & keypoints,
-		float* grad_magnitudes, float* grad_orientations) {
+		std::vector<PointWithAngle> & points_with_angle) {
 	int r, c;
 	// previous and next adjacent pixel values
 	int prev_rp, next_rp, prev_cp, next_cp;
@@ -118,52 +120,120 @@ void Keypoint::find_corners_gradients(
 			grad_x = next_cp - prev_cp;
 			grad_y = next_rp - prev_rp;
 
-			grad_magnitudes[r * cols + c] = (
-				grad_x * grad_x + grad_y * grad_y);
+			PointWithAngle newp;
+			newp.angle = atan2f(grad_y, grad_x);
+			newp.magnitude = grad_x * grad_x + grad_y * grad_y;
+			coord pos(r, c);
+			newp.pos = pos;
+			points_with_angle.push_back(newp);
 
-			grad_orientations[r * cols + c] = (
-				atan2f(grad_y, grad_x));
-			
-			if (abs(grad_x) > 0 && abs(grad_y) > 0) {
-				avg_gradx += abs(grad_x);
-				avg_grady += abs(grad_y);
-				count++;
-			}
 			if (is_corner(abs(grad_x), abs(grad_y))) {
 				coord new_kp(r, c);
 				keypoints.push_back(new_kp);
 			}
 		}
 	}
-	std::cout << "Average gradients:" << std::endl;
-	std::cout << (avg_gradx / (double)count);
-	std::cout << ", " << (avg_grady / (double)count);
-	std::cout << std::endl;
 }
 
 int squared_dist(int x, int y) {
 	return x * x + y * y;
 }
 
+double dist_norm(int width, int height) {
+	assert(width % 2 == 0);
+	assert(height % 2 == 0);
+	int half_w = width/2;
+	int half_h = height/2;
+	int x, y;
+	double total = 0;
+	for (x = -half_w; x <= half_w; x++)  {
+		for (y = -half_h; y <= half_h; y++) {
+			total += (double)squared_dist(x, y);
+		}
+	}
+	return total;
+}
+
+// discrete weighting pixel row and column distance
+double inv_distance_weight(int r_offset, int c_offset, double norm) {
+	return squared_dist(r_offset, c_offset) / norm;
+}
+
+int offset_to_region(int r_offset, int c_offset) {
+	return r_offset * NUM_REGIONS_SQRT + c_offset;
+}
+
+/*
+ * Return a bin index in range [0, NUM_BINS) given some angle.
+ * Converts radian angle into degrees within the range [0, 360) 
+ * and finds the index corresponding to that angle.
+ */
+int ang_to_bin(float ang_rad) {
+	int ang_deg = (int)(ang_rad * RAD_TO_DEG);
+	int bin = (int)(((float)(ang_deg % 360) / 360.0) * NUM_BINS);
+	assert(0 <= bin && bin < NUM_BINS);
+	return bin;
+}
+
 /* For each keypoint, generate 16 separate histograms
+
+For each of the 16 4x4 regions to overall cover entire 16 x 16 window:
+
+// each row for a region, each column for a histogram bin
+float gradient_hist[16][8];
+
+// sum of weights for each histogram, use this to normalize each histogram
+float gradient_hist_norm[16];
+
+// apply kernel to each adjacent neighbor weigh by distance
+gaussian_kernel = [1, 3, 6, 9, 6, 3, 1]
+
+create a temporary 16 x 16 image around this keypoint
+Apply gaussian blur to it by scaling pixel values down based
+on their distance from keypoint
+
+// iterate through this temporary 16 x 16 image
+for r_offset = -8; r_offset <= 8; r_offset++
+	for c_offset = -8; c_offset <= 8; c_offset++
+		// example:  -8, -8 corresponds to region 0
+		region_idx = get_region_id(r_offset, c_offset)
+		grad_ang = 
+		hist_bin_idx = get_bin_idx(grad_ang)
+		grad_mag = 
+		dist_from_kp = get_dist(r_offset, c_offset)
+		scale = grad_mag
+		gradient_hist_norm[region_idx] += scale
+		gradient_hist[region_idx][hist_bin_idx] +=
+		
+
+
+for i, j in rows, cols of gradient_hist
+	// make 128 orientation feature vec relative to keypoint orientation
+	// so rotation invariant
+	gradient_hist[i][j] -= keypoint_grad_ang
 */
 void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
-	float* grad_magnitudes, float* grad_orientations, 
-	std::vector<float> & kp_gradients, int rows, int cols) {
+		std::vector<PointWithAngle> all_points, 
+		std::vector<PointWithAngle> keypoints_with_angles, 
+		int rows, int cols) {
 
 	// 16 x 8, each row corresponds to a (4 x 4) region around the keypoint
 	// ordered in row-major format
 	// each col represents the 8 
-	float grad_histogram[NUM_REGIONS * NUM_BINS];
-	int row, col, new_r, new_c, r_offset, c_offset;
+	float grad_histogram[NUM_REGIONS][NUM_BINS];
+	int row, col, new_r, new_c, r_offset, c_offset, region_idx;
 	double total_magnitude, weighted_angle_sum;
-	int dist;
+	double inv_dist;
 	float mag, ang, scale;
+	double normalizer = dist_norm(NUM_BINS, NUM_BINS);
 	for (coord kp : keypoints) {
 		row = kp.first;
 		col = kp.second;
 		total_magnitude = 0;
 		weighted_angle_sum = 0;
+
+		// used to apply gaussian 
+		// Image neighbors(8, 8);
 
 		// find gradients of pixels in this region around keypoint
 		for (r_offset = -4; r_offset <= 4; r_offset++) {
@@ -172,19 +242,16 @@ void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
 			for (c_offset = -4; c_offset <= 4; c_offset++) {
 				new_c = col + c_offset;
 				if (new_c < 0 || new_c >= cols) continue;
-
-				// don't count current keypoint's own gradient
-				if(new_r == row && new_c == col) continue;
 				
-				dist = squared_dist(new_r - row, new_c - col);
-				mag = grad_magnitudes[new_r * cols + new_c];
-				ang = grad_orientations[new_r * cols + new_c];
-				scale = mag / (float)dist;
+				inv_dist = inv_distance_weight(r_offset, c_offset, normalizer);
+				ang = all_points[new_r * cols + new_c].angle;
+				mag = all_points[new_r * cols + new_c].magnitude;
+
+				scale = mag * inv_dist;
 				total_magnitude += scale;
-				weighted_angle_sum += (scale * ang);
+				region_idx = offset_to_region(r_offset, c_offset);
+				grad_histogram[region_idx][ang_to_bin(ang)] += scale;
 			}
 		}
-
-		kp_gradients.push_back(weighted_angle_sum / total_magnitude);
 	}
 }

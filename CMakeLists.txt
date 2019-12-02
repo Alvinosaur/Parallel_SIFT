@@ -24,18 +24,18 @@ set(${PROJECT_NAME}_SOURCES
     src/main.cpp
     src/Image.cpp
     src/GaussianBlur.cpp
+    src/Keypoint.cpp
     src/LoG.cpp
     src/general_helpers.cpp
-    src/cv_helpers.cpp
 )
 
 set(${PROJECT_NAME}_test_gaussian_blur_SOURCES
     src/test_gaussian_blur.cpp
     src/Image.cpp
     src/GaussianBlur.cpp
+    src/Keypoint.cpp
     src/LoG.cpp
     src/general_helpers.cpp
-    src/cv_helpers.cpp
 )
 
 # Main
