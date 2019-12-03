@@ -18,7 +18,7 @@ const std::vector<float> standard_variances({
 });
 
 double LoG::find_LoG_images(std::vector<Image> & first_octave_LoG,
-        std::vector<Image> & second_octave_LoG, 
+        std::vector<Image> & second_octave_LoG,
         std::vector<Image> & third_octave_LoG,
         std::vector<Image> & fourth_octave_LoG) {
 
@@ -48,7 +48,8 @@ void LoG::create_blurs(std::vector<Image> & result, Image & src) {
     Image prev_scale = src;
 
     #pragma omp parallel for schedule(static)
-    for (float var : standard_variances) {
+    for (int i = 0; i < standard_variances.size(); i++) {
+        float var = standard_variances[i];
         // convolve source image with some variance
         gb.convolve(src, temp, var);
         // subtract from previous scale to obtain gaussian difference

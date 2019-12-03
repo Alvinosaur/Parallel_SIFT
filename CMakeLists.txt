@@ -4,6 +4,7 @@ project(Parallel_SIFT)
 set(CFLAGS
     -std=c++11
     -m64
+    -fopenmp
 )
 
 add_compile_options(${CFLAGS})
@@ -19,6 +20,13 @@ include_directories(
 set(ALL_LIBS
 	${OpenCV_LIBS}
 )
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 set(${PROJECT_NAME}_SOURCES
     src/main.cpp
@@ -47,3 +55,7 @@ target_link_libraries(${PROJECT_NAME}_main ${ALL_LIBS})
 # Test
 add_executable(${PROJECT_NAME}_test_gaussian_blur ${${PROJECT_NAME}_test_gaussian_blur_SOURCES})
 target_link_libraries(${PROJECT_NAME}_test_gaussian_blur ${ALL_LIBS})
+
+# Test OpenMP Compilation
+add_executable(test_openmp src/test_openmp.cpp)
+

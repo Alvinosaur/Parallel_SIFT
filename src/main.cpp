@@ -26,13 +26,13 @@ int main(int argc, char* argv[]){
         exit(-1);
     }
     std::string img_path;
-    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index, 
+    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index,
             &grad_threshold)) {
         std::cout << "Failed to pass in valid image path with -p" << std::endl;
         exit(-1);
     };
 
-    cv::Mat res_output, src_mat = cv::imread(img_path.c_str(), 
+    cv::Mat res_output, src_mat = cv::imread(img_path.c_str(),
         CV_LOAD_IMAGE_GRAYSCALE);
     Image src(src_mat);
 
@@ -61,14 +61,12 @@ int main(int argc, char* argv[]){
     // kp_finder.find_keypoints(octave2_log, octave2_kp);
     // kp_finder.find_keypoints(octave3_log, octave3_kp);
     // kp_finder.find_keypoints(octave4_log, octave4_kp);
-    
+
     if (debug) cout << "Storing result" << endl;
     printf("%lu, %d\n", octave1_kp.size(), view_index);
 
     Image gradx(src.rows, src.cols), grady(src.rows, src.cols);
     std::vector<coord> keypoints;
-    float grad_magnitudes[src.rows * src.cols];
-    float grad_orientations[src.rows * src.cols];
 
     std::vector<PointWithAngle> points_with_angle;
     SIFT_TIME = std::min(SIFT_TIME, kp_finder.find_corners_gradients(
@@ -80,17 +78,17 @@ int main(int argc, char* argv[]){
     Image keypoints_img(src.rows, src.cols);
     kp_finder.mark_keypoints(keypoints_img, keypoints);
     printf("Num keypoints: %lu\n", keypoints.size());
-    
+
     //     remove_target.set(r, c, 0);
-    //     // printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n", 
+    //     // printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n",
     //         // r, c, grad_x, grad_y);
     // } else {
     //     remove_target.set(r, c, remove_target.get(r, c) * 70);
-    
+
     keypoints_img.store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     // cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
-    imshow( "Blurred pikachu!", res_output );
-    cv::waitKey(0);
+    // imshow( "Blurred pikachu!", res_output );
+    // cv::waitKey(0);
     return 0;
 }
