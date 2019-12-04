@@ -53,6 +53,7 @@ Image operator-(const Image & lhs, const Image & rhs) {
     assert(lhs.rows == rhs.rows && lhs.cols == rhs.cols);
     Image subt_res(lhs.rows, lhs.cols);
     int idx, res;
+
     for (int r = 0; r < lhs.rows; r++) {
         for (int c = 0; c < lhs.cols; c++) {
             idx = r * lhs.cols + c;

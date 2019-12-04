@@ -10,6 +10,13 @@
 // discrete bins of histogram as a discrete range of angles
 extern const std::vector<float> angle_bins;
 
+class PointWithAngle {
+public:
+	coord pos;
+	float angle;
+	float magnitude;
+};
+
 class Keypoint {
     Image src;
 	float grad_thresh;
@@ -23,15 +30,16 @@ public:
 		std::vector<Image> & keypoint_results);
 
 	double find_corners_gradients(const Image & src, 
-		std::vector<coord> & keypoints, float* grad_magnitudes, 
-		float* grad_orientations);
+		std::vector<coord> & keypoints,
+		std::vector<PointWithAngle> & points_with_angle);
 
 	bool is_corner(int grad_x, int grad_y);
 
 	void mark_keypoints(Image & src, std::vector<coord> & keypoints);
 
 	void find_keypoint_orientations(std::vector<coord> & keypoints,
-		float* grad_magnitudes, float* grad_orientations, 
-		std::vector<float> & kp_gradients, int rows, int cols);
+		std::vector<PointWithAngle> all_points, 
+		std::vector<PointWithAngle> keypoints_with_angles, 
+		int rows, int cols);
 };
 #endif 

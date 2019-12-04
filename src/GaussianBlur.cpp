@@ -58,30 +58,41 @@ void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
 
     // along y - direction
     float sum;
-    int x, y, x1, y1, i, shift, new_val;
-    for(y = 0; y < rows; y++){
-        for(x = 0; x < cols; x++){
-            sum = 0.0;
-            for(i = 0; i < K; i++){
-                shift = i - mean_K;
-                y1 = reflect(rows, y + shift);
-                sum = sum + distrib[i]* (float)img.get(y1, x);
-            }
-            temp[y*cols + x] = sum;
+    int y = 0;
+    #pragma omp parallel for reduction(+: sum) 
+    for (int j = 0; j < rows * cols; j++) {
+        int x0 = 0, x1, y1, shift, new_val; 
+        int x = j % cols;
+        if (x == cols -1 && y != rows-1) y++;
+
+        float sum = 0.0;
+        for(int i = 0; i < K; i++){
+            shift = i - mean_K;
+            y1 = reflect(rows, y + shift);
+            sum += distrib[i]* (float)img.get(y1, x);
         }
+        temp[y*cols + x] = sum;
     }
 
+
     // along x - direction
-    for(y = 0; y < img.rows; y++){
-        for(x = 0; x < img.cols; x++){
-            sum = 0.0;
-            for(i = 0; i < K; i++){
-                shift = i - mean_K;
-                x1 = reflect(cols, x + shift);
-                sum = sum + distrib[i]*temp[y*cols + x1];
-            }
-            new_val = (int)sum;
-            new_img.set(y, x, new_val);
+    y = 0;
+    // #pragma omp parallel for reduction(+: sum)
+    for (int j = 0; j < rows * cols; j++) {
+        int x0 = 0, x1, y1, shift, new_val; 
+        int x = j % cols;
+        if (x == cols -1 && y != rows-1) y++;
+
+        sum = 0.0;
+        for(int i = 0; i < K; i++){
+            shift = i - mean_K;
+            x1 = reflect(cols, x + shift);
+            sum = sum + distrib[i]*temp[y*cols + x1];
         }
+        new_val = (int)sum;
+        new_img.set(y, x, new_val);
     }
+
+
 }
+
