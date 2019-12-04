@@ -127,6 +127,19 @@ Parallel_SIFT_test_gaussian_blur/fast:
 	$(MAKE) -f CMakeFiles/Parallel_SIFT_test_gaussian_blur.dir/build.make CMakeFiles/Parallel_SIFT_test_gaussian_blur.dir/build
 .PHONY : Parallel_SIFT_test_gaussian_blur/fast
 
+#=============================================================================
+# Target rules for targets named test_openmp
+
+# Build rule for target.
+test_openmp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_openmp
+.PHONY : test_openmp
+
+# fast build rule for target.
+test_openmp/fast:
+	$(MAKE) -f CMakeFiles/test_openmp.dir/build.make CMakeFiles/test_openmp.dir/build
+.PHONY : test_openmp/fast
+
 src/GaussianBlur.o: src/GaussianBlur.cpp.o
 .PHONY : src/GaussianBlur.o
 
@@ -310,6 +323,30 @@ src/test_gaussian_blur.cpp.s:
 	$(MAKE) -f CMakeFiles/Parallel_SIFT_test_gaussian_blur.dir/build.make CMakeFiles/Parallel_SIFT_test_gaussian_blur.dir/src/test_gaussian_blur.cpp.s
 .PHONY : src/test_gaussian_blur.cpp.s
 
+src/test_openmp.o: src/test_openmp.cpp.o
+.PHONY : src/test_openmp.o
+
+# target to build an object file
+src/test_openmp.cpp.o:
+	$(MAKE) -f CMakeFiles/test_openmp.dir/build.make CMakeFiles/test_openmp.dir/src/test_openmp.cpp.o
+.PHONY : src/test_openmp.cpp.o
+
+src/test_openmp.i: src/test_openmp.cpp.i
+.PHONY : src/test_openmp.i
+
+# target to preprocess a source file
+src/test_openmp.cpp.i:
+	$(MAKE) -f CMakeFiles/test_openmp.dir/build.make CMakeFiles/test_openmp.dir/src/test_openmp.cpp.i
+.PHONY : src/test_openmp.cpp.i
+
+src/test_openmp.s: src/test_openmp.cpp.s
+.PHONY : src/test_openmp.s
+
+# target to generate assembly for a file
+src/test_openmp.cpp.s:
+	$(MAKE) -f CMakeFiles/test_openmp.dir/build.make CMakeFiles/test_openmp.dir/src/test_openmp.cpp.s
+.PHONY : src/test_openmp.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -320,6 +357,7 @@ help:
 	@echo "... Parallel_SIFT_test_gaussian_blur"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... test_openmp"
 	@echo "... src/GaussianBlur.o"
 	@echo "... src/GaussianBlur.i"
 	@echo "... src/GaussianBlur.s"
@@ -341,6 +379,9 @@ help:
 	@echo "... src/test_gaussian_blur.o"
 	@echo "... src/test_gaussian_blur.i"
 	@echo "... src/test_gaussian_blur.s"
+	@echo "... src/test_openmp.o"
+	@echo "... src/test_openmp.i"
+	@echo "... src/test_openmp.s"
 .PHONY : help
 
 

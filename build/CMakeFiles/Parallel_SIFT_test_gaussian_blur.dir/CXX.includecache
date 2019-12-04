@@ -44,9 +44,15 @@ vector
 opencv2/highgui/highgui.hpp
 -
 
-../include/LoG.h
+../include/Keypoint.h
 Image.h
 ../include/Image.h
+general_helpers.h
+../include/general_helpers.h
+vector
+-
+utility
+-
 
 ../include/general_helpers.h
 Image.h
@@ -60,21 +66,31 @@ string
 getopt.h
 -
 
-/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.cpp
-LoG.h
-/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.h
-Image.h
-/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/Image.h
+/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/GaussianBlur.cpp
 GaussianBlur.h
 /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/GaussianBlur.h
+iostream
+-
+assert.h
+-
 general_helpers.h
 /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/general_helpers.h
+cmath
+-
+
+/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/Keypoint.cpp
+Keypoint.h
+/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/Keypoint.h
+general_helpers.h
+/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/general_helpers.h
+iostream
+-
+assert.h
+-
+cmath
+-
 CycleTimer.h
 /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/CycleTimer.h
-omp.h
--
-vector
--
 
 /usr/local/depot/opencv/include/opencv/cxcore.h
 opencv2/core/core_c.h

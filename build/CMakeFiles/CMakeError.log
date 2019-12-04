@@ -1,0 +1,53 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec2604852299/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec2604852299.dir/build.make CMakeFiles/cmTryCompileExec2604852299.dir/build
+gmake[1]: Entering directory `/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec2604852299.dir/CheckSymbolExists.c.o
+/usr/lib64/ccache/cc    -o CMakeFiles/cmTryCompileExec2604852299.dir/CheckSymbolExists.c.o   -c /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTryCompileExec2604852299
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec2604852299.dir/link.txt --verbose=1
+/usr/lib64/ccache/cc       CMakeFiles/cmTryCompileExec2604852299.dir/CheckSymbolExists.c.o  -o cmTryCompileExec2604852299 -rdynamic 
+CMakeFiles/cmTryCompileExec2604852299.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+gmake[1]: *** [cmTryCompileExec2604852299] Error 1
+gmake[1]: Leaving directory `/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp'
+gmake: *** [cmTryCompileExec2604852299/fast] Error 2
+
+File /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec4012085364/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec4012085364.dir/build.make CMakeFiles/cmTryCompileExec4012085364.dir/build
+gmake[1]: Entering directory `/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec4012085364.dir/CheckFunctionExists.c.o
+/usr/lib64/ccache/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTryCompileExec4012085364.dir/CheckFunctionExists.c.o   -c /usr/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec4012085364
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec4012085364.dir/link.txt --verbose=1
+/usr/lib64/ccache/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTryCompileExec4012085364.dir/CheckFunctionExists.c.o  -o cmTryCompileExec4012085364 -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+gmake[1]: *** [cmTryCompileExec4012085364] Error 1
+gmake[1]: Leaving directory `/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/CMakeTmp'
+gmake: *** [cmTryCompileExec4012085364/fast] Error 2
+
+

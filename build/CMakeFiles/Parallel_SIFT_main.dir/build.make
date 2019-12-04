@@ -121,32 +121,9 @@ CMakeFiles/Parallel_SIFT_main.dir/src/GaussianBlur.cpp.o.provides: CMakeFiles/Pa
 
 CMakeFiles/Parallel_SIFT_main.dir/src/GaussianBlur.cpp.o.provides.build: CMakeFiles/Parallel_SIFT_main.dir/src/GaussianBlur.cpp.o
 
-CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o: CMakeFiles/Parallel_SIFT_main.dir/flags.make
-CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o: ../src/LoG.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles $(CMAKE_PROGRESS_4)
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o"
-	/usr/lib64/ccache/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o -c /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.cpp
-
-CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.i"
-	/usr/lib64/ccache/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.cpp > CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.i
-
-CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.s"
-	/usr/lib64/ccache/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.cpp -o CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.s
-
-CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires:
-.PHONY : CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires
-
-CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires
-	$(MAKE) -f CMakeFiles/Parallel_SIFT_main.dir/build.make CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides.build
-.PHONY : CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides
-
-CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides.build: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o
-
 CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o: CMakeFiles/Parallel_SIFT_main.dir/flags.make
 CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o: ../src/Keypoint.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles $(CMAKE_PROGRESS_5)
+	$(CMAKE_COMMAND) -E cmake_progress_report /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles $(CMAKE_PROGRESS_4)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o"
 	/usr/lib64/ccache/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o -c /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/Keypoint.cpp
 
@@ -166,6 +143,29 @@ CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o.provides: CMakeFiles/Parall
 .PHONY : CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o.provides
 
 CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o.provides.build: CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o
+
+CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o: CMakeFiles/Parallel_SIFT_main.dir/flags.make
+CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o: ../src/LoG.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles $(CMAKE_PROGRESS_5)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o"
+	/usr/lib64/ccache/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o -c /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.cpp
+
+CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.i"
+	/usr/lib64/ccache/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.cpp > CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.i
+
+CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.s"
+	/usr/lib64/ccache/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/src/LoG.cpp -o CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.s
+
+CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires:
+.PHONY : CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires
+
+CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires
+	$(MAKE) -f CMakeFiles/Parallel_SIFT_main.dir/build.make CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides.build
+.PHONY : CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides
+
+CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.provides.build: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o
 
 CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o: CMakeFiles/Parallel_SIFT_main.dir/flags.make
 CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o: ../src/general_helpers.cpp
@@ -195,8 +195,8 @@ Parallel_SIFT_main_OBJECTS = \
 "CMakeFiles/Parallel_SIFT_main.dir/src/main.cpp.o" \
 "CMakeFiles/Parallel_SIFT_main.dir/src/Image.cpp.o" \
 "CMakeFiles/Parallel_SIFT_main.dir/src/GaussianBlur.cpp.o" \
-"CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o" \
 "CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o" \
+"CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o" \
 "CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o"
 
 # External object files for target Parallel_SIFT_main
@@ -205,8 +205,8 @@ Parallel_SIFT_main_EXTERNAL_OBJECTS =
 Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/src/main.cpp.o
 Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/src/Image.cpp.o
 Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/src/GaussianBlur.cpp.o
-Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o
 Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o
+Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o
 Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o
 Parallel_SIFT_main: CMakeFiles/Parallel_SIFT_main.dir/build.make
 Parallel_SIFT_main: /usr/local/depot/opencv/lib64/libopencv_calib3d.so.3.4.1
@@ -247,8 +247,8 @@ CMakeFiles/Parallel_SIFT_main.dir/build: Parallel_SIFT_main
 CMakeFiles/Parallel_SIFT_main.dir/requires: CMakeFiles/Parallel_SIFT_main.dir/src/main.cpp.o.requires
 CMakeFiles/Parallel_SIFT_main.dir/requires: CMakeFiles/Parallel_SIFT_main.dir/src/Image.cpp.o.requires
 CMakeFiles/Parallel_SIFT_main.dir/requires: CMakeFiles/Parallel_SIFT_main.dir/src/GaussianBlur.cpp.o.requires
-CMakeFiles/Parallel_SIFT_main.dir/requires: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires
 CMakeFiles/Parallel_SIFT_main.dir/requires: CMakeFiles/Parallel_SIFT_main.dir/src/Keypoint.cpp.o.requires
+CMakeFiles/Parallel_SIFT_main.dir/requires: CMakeFiles/Parallel_SIFT_main.dir/src/LoG.cpp.o.requires
 CMakeFiles/Parallel_SIFT_main.dir/requires: CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o.requires
 .PHONY : CMakeFiles/Parallel_SIFT_main.dir/requires
 

@@ -126,6 +126,41 @@ clean: CMakeFiles/Parallel_SIFT_test_gaussian_blur.dir/clean
 .PHONY : clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/test_openmp.dir
+
+# All Build rule for target.
+CMakeFiles/test_openmp.dir/all:
+	$(MAKE) -f CMakeFiles/test_openmp.dir/build.make CMakeFiles/test_openmp.dir/depend
+	$(MAKE) -f CMakeFiles/test_openmp.dir/build.make CMakeFiles/test_openmp.dir/build
+	$(CMAKE_COMMAND) -E cmake_progress_report /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles  13
+	@echo "Built target test_openmp"
+.PHONY : CMakeFiles/test_openmp.dir/all
+
+# Include target in all.
+all: CMakeFiles/test_openmp.dir/all
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_openmp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/test_openmp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_openmp.dir/rule
+
+# Convenience name for target.
+test_openmp: CMakeFiles/test_openmp.dir/rule
+.PHONY : test_openmp
+
+# clean rule for target.
+CMakeFiles/test_openmp.dir/clean:
+	$(MAKE) -f CMakeFiles/test_openmp.dir/build.make CMakeFiles/test_openmp.dir/clean
+.PHONY : CMakeFiles/test_openmp.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/test_openmp.dir/clean
+.PHONY : clean
+
+#=============================================================================
 # Special targets to cleanup operation of make.
 
 # Special rule to run CMake to check the build system integrity.
