@@ -9,7 +9,7 @@ set(CFLAGS
 
 add_compile_options(${CFLAGS})
 # NOTE: The below path is for CMU machines
-set(OpenCV_DIR /usr/local/depot/opencv/share/OpenCV)
+# set(OpenCV_DIR /usr/local/depot/opencv/share/OpenCV)
 find_package(OpenCV REQUIRED)
 
 include_directories(
@@ -34,7 +34,6 @@ set(${PROJECT_NAME}_SOURCES
     src/GaussianBlur.cpp
     src/Keypoint.cpp
     src/LoG.cpp
-    src/Keypoint.cpp
     src/general_helpers.cpp
 )
 
@@ -44,7 +43,6 @@ set(${PROJECT_NAME}_test_gaussian_blur_SOURCES
     src/GaussianBlur.cpp
     src/Keypoint.cpp
     src/LoG.cpp
-    src/Keypoint.cpp
     src/general_helpers.cpp
 )
 
@@ -53,8 +51,9 @@ add_executable(${PROJECT_NAME}_main ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(${PROJECT_NAME}_main ${ALL_LIBS})
 
 # Test
-add_executable(${PROJECT_NAME}_test_gaussian_blur ${${PROJECT_NAME}_test_gaussian_blur_SOURCES})
-target_link_libraries(${PROJECT_NAME}_test_gaussian_blur ${ALL_LIBS})
+# add_executable(${PROJECT_NAME}_test_gaussian_blur ${${PROJECT_NAME}_test_gaussian_blur_SOURCES})
+# target_link_libraries(${PROJECT_NAME}_test_gaussian_blur ${ALL_LIBS})
 
 # Test OpenMP Compilation
-add_executable(test_openmp src/test_openmp.cpp)
+# add_executable(test_openmp src/test_openmp.cpp)
+

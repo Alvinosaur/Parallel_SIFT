@@ -22,8 +22,10 @@
 /*
  #pragma omp parallel shared(a,b,c,d) private(i)
    {
+
    #pragma omp sections nowait
      {
+
      #pragma omp section
      for (i=0; i < N; i++){
        c[i] = a[i] + b[i];
@@ -33,8 +35,11 @@
      for (i=0; i < N; i++){
        d[i] = a[i] * b[i];
        printf("Thread: %d, i: %d\n", omp_get_thread_num(), i);
+
      }
+
      }  // end of sections
+
    }  // end of parallel region
  */
  }

@@ -2,7 +2,11 @@
 #include <iostream>
 #include <string>
 #include <getopt.h>
+
 #include <opencv2/highgui/highgui.hpp>
+#include "opencv2/core/core.hpp"
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/highgui/highgui.hpp"
 
 #include "GaussianBlur.h"
 #include "Keypoint.h"
@@ -17,26 +21,77 @@ using namespace std;
 
 bool debug = false;
 int view_index = 0;
+float grad_threshold = 0;
+float intensity_threshold = 1;
+
+void find_keypoint_features(Image & src, cv::Mat & result_features, 
+    std::vector<cv::KeyPoint> & cv_keypoints);
 
 int main(int argc, char* argv[]){
     float variance = 1;
-    float grad_threshold = 0;
-    float intensity_threshold = 1;
     if (argc <= 1) {
         cout << "Need to pass in image filepath!" << endl;
         exit(-1);
     }
-    std::string img_path;
-    if (!get_args(argc, argv, img_path, &variance, &debug, &view_index,
-            &grad_threshold)) {
-        std::cout << "Failed to pass in valid image path with -p" << std::endl;
+    std::string img1_path, img2_path;
+    if (!get_args(argc, argv, img1_path, img2_path, &variance, &debug, 
+        &view_index, &grad_threshold)) {
+        std::cout << "Failed to pass in valid image path with -p1 and -p2";
+        std::cout << std::endl;
         exit(-1);
     };
 
-    cv::Mat res_output, src_mat = cv::imread(img_path.c_str(),
+    cv::Mat src1_mat = cv::imread(img1_path.c_str(),
         CV_LOAD_IMAGE_GRAYSCALE);
-    Image src(src_mat);
+    cv::Mat src2_mat = cv::imread(img2_path.c_str(),
+        CV_LOAD_IMAGE_GRAYSCALE);
+    Image src1(src1_mat);
+    Image src2(src2_mat);
 
+    cv::Mat res_output, features1, features2;
+    std::vector<cv::KeyPoint> keypoints1, keypoints2;
+    find_keypoint_features(src1, features1, keypoints1);
+    find_keypoint_features(src2, features2, keypoints2);
+
+    // //-- Step 3: Matching descriptor vectors using FLANN matcher
+    cv::FlannBasedMatcher matcher;
+    std::vector< cv::DMatch > matches;
+    matcher.match( features1, features2, matches );
+
+    double max_dist = 0; double min_dist = 100;
+
+    // //-- Quick calculation of max and min distances between keypoints
+    for( int i = 0; i < features1.rows; i++ )
+    { double dist = matches[i].distance;
+        if( dist < min_dist ) min_dist = dist;
+        if( dist > max_dist ) max_dist = dist;
+    }
+
+    //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
+    //-- or a small arbitary value ( 0.02 ) in the event that min_dist is very
+    //-- small)
+    //-- PS.- radiusMatch can also be used here.
+    std::vector< cv::DMatch > good_matches;
+
+    for( int i = 0; i < features1.rows; i++ )
+    { if( matches[i].distance <= max(2*min_dist, 0.02) )
+        { good_matches.push_back( matches[i]); }
+    }
+
+    //-- Draw only "good" matches
+    drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
+        good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
+        vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+
+    imwrite( "after_blur_result.jpg", res_output);
+    cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
+    imshow( "Blurred pikachu!", res_output );
+    cv::waitKey(0);
+    return 0;
+}
+
+void find_keypoint_features(Image & src, cv::Mat & result_features, 
+        std::vector<cv::KeyPoint> & cv_keypoints) {
     ///////////////////////////////////// Algorithm BEGIN /////////////////////////////////////
     double SIFT_TIME = 50000.;
     using namespace std::chrono; 
@@ -79,28 +134,11 @@ int main(int argc, char* argv[]){
 
     std::vector<float> kp_gradients;
 
-    Image keypoints_img(src.rows, src.cols);
-    SIFT_TIME = std::min(SIFT_TIME, kp_finder.mark_keypoints(keypoints_img, keypoints));
-    printf("Num keypoints: %lu\n", keypoints.size());
+    std::vector<KeypointFeature> keypoint_features;
+    kp_finder.find_keypoint_orientations(keypoints, points_with_angle, 
+        keypoint_features, src.rows, src.cols, standard_variances[2]);
 
-
-    auto stop = high_resolution_clock::now(); 
-    auto overallTime = duration_cast<microseconds>(stop - start); 
-
-    cout << "Total Time: " << fixed
-         << overallTime.count() 
-         << "ms" << endl;
-
-    //     remove_target.set(r, c, 0);
-    //     // printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n",
-    //         // r, c, grad_x, grad_y);
-    // } else {
-    //     remove_target.set(r, c, remove_target.get(r, c) * 70);
-
-    keypoints_img.store_opencv(res_output);
-    imwrite( "after_blur_result.jpg", res_output);
-    // cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
-    imshow( "Blurred pikachu!", res_output );
-    cv::waitKey(0);
-    return 0;
+    kp_finder.store_keypoints(keypoint_features, cv_keypoints, 1, src.cols);
+    
+    kp_finder.store_features(keypoint_features, result_features);
 }

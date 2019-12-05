@@ -3,7 +3,7 @@
 #include "GaussianBlur.h"
 #include "general_helpers.h"
 #include "CycleTimer.h"
-#include <omp.h>
+// #include <omp.h>
 
 
 
@@ -74,7 +74,7 @@ void LoG::create_blurs(std::vector<Image> & result, Image & src) {
     Image temp(src.rows, src.cols);
     Image prev_scale = src;
 
-
+    // #pragma omp parallel for schedule(static)
     for (int i = 0; i < standard_variances.size(); i++) {
         float var = standard_variances[i];
         // convolve source image with some variance

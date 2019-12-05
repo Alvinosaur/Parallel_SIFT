@@ -4,16 +4,32 @@
 #include "Image.h"
 #include "general_helpers.h"
 
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/core/core.hpp"
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/highgui/highgui.hpp"
+
 #include <vector>
 #include <utility>
+
+#define FEATURE_VEC_SIZE 128
 
 // discrete bins of histogram as a discrete range of angles
 extern const std::vector<float> angle_bins;
 
+class KeypointFeature {
+public:
+	coord pos;
+	int size;
+	int angle;
+	int magnitude;
+	float grad_histogram[FEATURE_VEC_SIZE] = {0};
+};
+
 class PointWithAngle {
 public:
 	coord pos;
-	float angle;
+	int angle;  // angle in range [0, 360)
 	float magnitude;
 };
 
@@ -39,7 +55,13 @@ public:
 
 	void find_keypoint_orientations(std::vector<coord> & keypoints,
 		std::vector<PointWithAngle> all_points, 
-		std::vector<PointWithAngle> keypoints_with_angles, 
-		int rows, int cols);
+		std::vector<KeypointFeature> keypoints_with_angles, 
+		int rows, int cols, int size);
+
+	void store_features(std::vector<KeypointFeature> & kp_features,
+		cv::Mat & descriptors);
+
+	void store_keypoints(std::vector<KeypointFeature> & keypoints_src,
+		std::vector<cv::KeyPoint> & cv_keypoints_dst, int octave, int cols);
 };
 #endif 

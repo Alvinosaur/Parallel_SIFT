@@ -32,7 +32,8 @@ int almost_equal(float v1, float v2, float abs_error);
 int reflect(int M, int x);
 
 void print_usage();
-bool get_args(int argc, char** argv, std::string & img_path, float* variance, 
+bool get_args(int argc, char** argv, 
+        std::string & img1_path, std::string & img2_path, float* variance, 
         bool* debug, int* view_index, float* gradient_threshold);
 
 void shrink_half(Image & src, Image & dst);
