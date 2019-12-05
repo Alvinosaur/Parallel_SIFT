@@ -61,6 +61,8 @@ void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
     float sumx, sumy, sum;
     int y = 0;
 
+    // #pragma omp parallel for shared(new_img, temp, distrib) reduction(+: sumy) reduction(+: sumx)
+    // #pragma omp parallel for schedule(dynamic)
     // for (int j = 0; j < rows * cols; j++) {
     //     int x1, y1, shift, new_val; 
     //     int x = j % cols;
