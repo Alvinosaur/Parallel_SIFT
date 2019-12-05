@@ -35,28 +35,67 @@ double LoG::find_LoG_images(std::vector<Image> & first_octave_LoG,
         #pragma omp single
         {
             #pragma omp task
-            shrink_half(orig, half);
+            {
+                shrink_half(orig, half);
+                create_blurs(second_octave_LoG, half);
+            }
+            
             #pragma omp task
-            shrink_half(half, quarter);
+            {
+                shrink_quarter(orig, quarter);
+                create_blurs(third_octave_LoG, quarter);
+            }
+            // shrink_half(half, quarter);
             #pragma omp task
-            shrink_half(quarter, eighth);
+            {
+                shrink_eighth(orig, eighth);
+                create_blurs(fourth_octave_LoG, eighth);
+            }
+            // shrink_half(quarter, eighth);
+
+            #pragma omp task
+            create_blurs(first_octave_LoG, orig);
+
         }
     }
 
-    #pragma omp parallel 
-    {
-        #pragma omp single
-        {    
-            #pragma omp task
-            create_blurs(first_octave_LoG, orig);
-            #pragma omp task
-            create_blurs(second_octave_LoG, half);
-            #pragma omp task
-            create_blurs(third_octave_LoG, quarter);
-            #pragma omp task
-            create_blurs(fourth_octave_LoG, eighth);
-        }
-    }
+
+    // #pragma omp parallel
+    // {
+    //     #pragma omp single
+    //     {
+    //         #pragma omp task
+    //         shrink_half(orig, half);
+
+    //         #pragma omp task
+    //         shrink_half(half, quarter);
+
+    //         #pragma omp task
+    //         shrink_half(quarter, eighth);
+    //     }
+    // }
+
+    // #pragma omp parallel
+    // {
+    //     #pragma omp single
+    //     {
+    //         #pragma omp task
+    //         create_blurs(second_octave_LoG, half);
+
+    //         #pragma omp task
+    //         create_blurs(third_octave_LoG, quarter);
+
+    //         #pragma omp task
+    //         create_blurs(fourth_octave_LoG, eighth);
+
+    //         #pragma omp task
+    //         create_blurs(first_octave_LoG, orig);
+
+    //     }
+    // }
+
+
+ 
 
     double endTime = CycleTimer::currentSeconds();
     double overallTime = endTime - startTime;

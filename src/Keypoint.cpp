@@ -116,11 +116,13 @@ bool Keypoint::is_corner(int grad_x, int grad_y) {
 	return (grad_x > grad_thresh) && (grad_y  > grad_thresh);
 }
 
-void Keypoint::mark_keypoints(Image & src, std::vector<coord> & keypoints) {
+double Keypoint::mark_keypoints(Image & src, std::vector<coord> & keypoints) {
+
+	double startTime = CycleTimer::currentSeconds();
+
 	int row, col;
 	// set all values to 0 initially
 	src.data.assign(src.rows * src.cols, 0); 
-	// for (coord rc : keypoints) {
 
 	for (int i = 0; i < keypoints.size(); i++) {
 		coord rc = keypoints[i];
@@ -128,6 +130,10 @@ void Keypoint::mark_keypoints(Image & src, std::vector<coord> & keypoints) {
 		col = rc.second;
 		src.data[row * src.cols + col] = MAX_VAL;
 	}
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
 double Keypoint::find_corners_gradients(

@@ -671,6 +671,7 @@ CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o: /usr/local/depot/op
 CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o: /usr/local/depot/opencv/include/opencv2/videostab/stabilizer.hpp
 CMakeFiles/Parallel_SIFT_main.dir/src/general_helpers.cpp.o: /usr/local/depot/opencv/include/opencv2/videostab/wobble_suppression.hpp
 
+CMakeFiles/Parallel_SIFT_main.dir/src/main.cpp.o: ../include/CycleTimer.h
 CMakeFiles/Parallel_SIFT_main.dir/src/main.cpp.o: ../include/GaussianBlur.h
 CMakeFiles/Parallel_SIFT_main.dir/src/main.cpp.o: ../include/Image.h
 CMakeFiles/Parallel_SIFT_main.dir/src/main.cpp.o: ../include/Keypoint.h

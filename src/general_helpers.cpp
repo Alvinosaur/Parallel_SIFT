@@ -23,6 +23,36 @@ void shrink_half(Image & src, Image & dst) {
     }
 }
 
+void shrink_quarter(Image & src, Image & dst) {
+    int total_val = 0;
+    for (int i = 0; i < src.rows-3; i+=4) {
+        for (int j = 0; j < src.cols-3; j+=4) {
+
+            for (int y = 0; y < 3; y++) {
+                for (int x = 0; x < 3; x++) {
+                    total_val += src.get(i+y, j+x);
+                }
+            }
+            dst.set(i/4, j/4, (int)((float)total_val / 4.0));
+        }
+    }
+}
+
+void shrink_eighth(Image & src, Image & dst) {
+    int total_val = 0;
+    for (int i = 0; i < src.rows-7; i+=8) {
+        for (int j = 0; j < src.cols-7; j+=8) {
+
+            for (int y = 0; y < 7; y++) {
+                for (int x = 0; x < 7; x++) {
+                    total_val += src.get(i+y, j+x);
+                }
+            }
+            dst.set(i/8, j/8, (int)((float)total_val / 4.0));
+        }
+    }
+}
+
 void print_usage() {
     /*
      * Prints out usage info for passing in commandline args for matrix

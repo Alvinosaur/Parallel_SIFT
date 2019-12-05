@@ -35,7 +35,7 @@ public:
 
 	bool is_corner(int grad_x, int grad_y);
 
-	void mark_keypoints(Image & src, std::vector<coord> & keypoints);
+	double mark_keypoints(Image & src, std::vector<coord> & keypoints);
 
 	void find_keypoint_orientations(std::vector<coord> & keypoints,
 		std::vector<PointWithAngle> all_points, 

@@ -9,6 +9,7 @@
 #include "LoG.h"
 #include "Image.h"
 #include "general_helpers.h"
+#include <chrono>
 #include <omp.h>
 
 
@@ -38,6 +39,9 @@ int main(int argc, char* argv[]){
 
     ///////////////////////////////////// Algorithm BEGIN /////////////////////////////////////
     double SIFT_TIME = 50000.;
+    using namespace std::chrono; 
+    auto start = high_resolution_clock::now(); 
+
 
     ///////////////////////////////////// LoG BEGIN /////////////////////////////////////
     // Find Difference of Gaussian Images using LoG
@@ -76,8 +80,16 @@ int main(int argc, char* argv[]){
     std::vector<float> kp_gradients;
 
     Image keypoints_img(src.rows, src.cols);
-    kp_finder.mark_keypoints(keypoints_img, keypoints);
+    SIFT_TIME = std::min(SIFT_TIME, kp_finder.mark_keypoints(keypoints_img, keypoints));
     printf("Num keypoints: %lu\n", keypoints.size());
+
+
+    auto stop = high_resolution_clock::now(); 
+    auto overallTime = duration_cast<microseconds>(stop - start); 
+
+    cout << "Total Time: " << fixed
+         << overallTime.count() 
+         << "ms" << endl;
 
     //     remove_target.set(r, c, 0);
     //     // printf("Removed a keypoint(%d, %d) with grad(%d, %d)\n",

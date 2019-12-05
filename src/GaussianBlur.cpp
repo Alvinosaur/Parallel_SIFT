@@ -56,30 +56,53 @@ void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
     int K = distrib.size();
     int mean_K = K / 2;
 
+
     // along y - direction
-    float sum;
+    float sumx, sumy, sum;
     int y = 0;
-    #pragma omp parallel for reduction(+: sum) 
+
+    // for (int j = 0; j < rows * cols; j++) {
+    //     int x1, y1, shift, new_val; 
+    //     int x = j % cols;
+    //     if (x == cols -1 && y != rows-1) y++;
+
+    //     sumy = 0.0;
+    //     for(int i = 0; i < K; i++){
+    //         shift = i - mean_K;
+    //         y1 = reflect(rows, y + shift);
+    //         sumy += distrib[i] * (float)img.get(y1, x);
+    //     }
+    //     temp[y*cols + x] = sumy;
+
+    //     sumx = 0.0;
+    //     for(int i = 0; i < K; i++){
+    //         shift = i - mean_K;
+    //         x1 = reflect(cols, x + shift);
+    //         sumx += distrib[i] * temp[y*cols + x1];
+    //     }
+    //     new_val = (int)sumx;
+    //     new_img.set(y, x, new_val);
+    // }
+    
+
     for (int j = 0; j < rows * cols; j++) {
-        int x0 = 0, x1, y1, shift, new_val; 
+        int x1, y1, shift, new_val; 
         int x = j % cols;
         if (x == cols -1 && y != rows-1) y++;
 
-        float sum = 0.0;
+        sumy = 0.0;
         for(int i = 0; i < K; i++){
             shift = i - mean_K;
             y1 = reflect(rows, y + shift);
-            sum += distrib[i]* (float)img.get(y1, x);
+            sumy += distrib[i] * (float)img.get(y1, x);
         }
-        temp[y*cols + x] = sum;
+        temp[y*cols + x] = sumy;
     }
-
-
     // along x - direction
     y = 0;
     // #pragma omp parallel for reduction(+: sum)
     for (int j = 0; j < rows * cols; j++) {
-        int x0 = 0, x1, y1, shift, new_val; 
+        int x1, y1, shift, new_val; 
         int x = j % cols;
         if (x == cols -1 && y != rows-1) y++;
 
@@ -87,7 +110,7 @@ void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
         for(int i = 0; i < K; i++){
             shift = i - mean_K;
             x1 = reflect(cols, x + shift);
-            sum = sum + distrib[i]*temp[y*cols + x1];
+            sum += distrib[i] * temp[y*cols + x1];
         }
         new_val = (int)sum;
         new_img.set(y, x, new_val);
