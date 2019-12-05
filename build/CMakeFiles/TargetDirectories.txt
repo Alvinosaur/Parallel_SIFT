@@ -1,3 +1,0 @@
-/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/Parallel_SIFT_main.dir
-/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/Parallel_SIFT_test_gaussian_blur.dir
-/afs/andrew.cmu.edu/usr4/hojunb/private/15418/Parallel_SIFT/build/CMakeFiles/test_openmp.dir
