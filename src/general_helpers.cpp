@@ -31,22 +31,24 @@ void print_usage() {
     printf("Usage:\n");
     printf("   -h   print help message describing usage\n");
     printf("   -d   print additional diagnostic information\n");
-    printf("   -p   path for input image\n");
+    printf("   -a   path for input image 1\n");
+    printf("   -b   path for input image 2\n");
     printf("   -i   view_index for which gaussian difference to view\n");
     printf("   -v   desired variance level\n");
     printf("   -g   gradient threshold for keypoint filtering\n");
 }
 
 
-bool get_args(int argc, char** argv, std::string & img_path, float* variance, 
+bool get_args(int argc, char** argv, 
+        std::string & img1_path, std::string & img2_path, float* variance, 
         bool* debug, int* view_index, float* gradient_threshold) {
     /*
      * Reads in input args from commandline.
      */
     extern char* optarg;
     int option;
-    bool set_img_path = false;
-    while ((option = getopt(argc, argv, "hdp:i:v:g:")) != EOF) {
+    bool set_img1_path = false, set_img2_path = false;
+    while ((option = getopt(argc, argv, "hda:b:i:v:g:")) != EOF) {
         switch (option) {
             case 'h':  // help
                 print_usage();
@@ -54,10 +56,15 @@ bool get_args(int argc, char** argv, std::string & img_path, float* variance,
             case 'd':
                 *debug = true;
                 break;
-            case 'p':
-                img_path = optarg;
-                set_img_path = true;
-                if (*debug) printf("Input Image Path: %s\n", img_path.c_str());
+            case 'a':
+                img1_path = optarg;
+                set_img1_path = true;
+                if (*debug) printf("Input Image1: %s\n", img1_path.c_str());
+                break;
+            case 'b':
+                img2_path = optarg;
+                set_img2_path = true;
+                if (*debug) printf("Input Image2: %s\n", img2_path.c_str());
                 break;
             case 'i':
                 *view_index = atoi(optarg);
@@ -77,5 +84,5 @@ bool get_args(int argc, char** argv, std::string & img_path, float* variance,
                 break;
         }
     }
-    return set_img_path;
+    return set_img1_path && set_img2_path;
 }

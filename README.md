@@ -1,8 +1,8 @@
 ## [Analysis of Data Parallelism and Task Parallelism on the SIFT Algorithm](https://alvinosaur.github.io/Parallel_SIFT/)
 
 
-### Summary: 
-We are implementing a parallel version of the SIFT algorithm to match similar localized features between two images. We will also analyze the different impacts of task-based and data-based parallelism on the SIFt algorithm. 
+### Summary:
+We are implementing a parallel version of the SIFT algorithm to match similar localized features between two images. We will also analyze the different impacts of task-based and data-based parallelism on the SIFt algorithm.
 
 
 ### How to run:
@@ -11,10 +11,10 @@ We are implementing a parallel version of the SIFT algorithm to match similar lo
 3. ```cd build```
 4. ```cmake ..```
 5. ```make```
-6. ```./<executable>``` (ie: Parallel_SIFT_test_gaussian_blur)
+6. ```./Parallel_SIFT_main -a photo2.jpg -b photo1.jpg -d -i 0 -g 7```
 
 ### Background:
-Matching features across two images is a common task in many computer vision applications. For instance, everything from robots to the newest iPhone uses disparity estimation to generate depth images from 2D images, similar to how humans estimate depth through two eyes. This disparity estimation attempts to align two slight shifted images through feature matching. Motion capture and optical flow similarly attempt to match two images and identify the overall displacement between these matching parts of image. 
+Matching features across two images is a common task in many computer vision applications. For instance, everything from robots to the newest iPhone uses disparity estimation to generate depth images from 2D images, similar to how humans estimate depth through two eyes. This disparity estimation attempts to align two slight shifted images through feature matching. Motion capture and optical flow similarly attempt to match two images and identify the overall displacement between these matching parts of image.
 
 Our project will involve parallelizing an algorithm for feature-matching known as Scale Invariant Feature Transform (SIFT), which can account for rotation, illumination, and perspective change between two images. At a high level, SIFT can be broken down into a few steps:
 
@@ -27,7 +27,7 @@ Distinguish key points in the same image and match key points from the two image
 
 ### Challenges:
 One of the major challenges that we have to face is creating all the algorithms must be implemented from scratch in both sequential and parallel. The sift algorithm itself has requires many calculations and modules in itself such as:
-### Scale Space: 
+### Scale Space:
 - Used for detecting keypoints
 - Gaussian Blur(similar to Ocean Simulator, playing with cache efficiency)
 - shrinking image to half prev size
@@ -38,11 +38,11 @@ One of the major challenges that we have to face is creating all the algorithms 
 - Orientation Assignment
 - Assignment of orientation to keypoints in case of invariance in image rotation
 - Keypoint Descriptor
-- Some specified dimension of points around the keypoint is taken 
+- Some specified dimension of points around the keypoint is taken
 - Keypoint Matching
 - Matching of keypoints between images
 
-While the SIFT algorithm is not innate sequential in nature, there needs to be a lot of synchronization and communication between workers in order to create an accurate mapping of similarities. If we were to do data parallelism, then we must account for the fact that if we split the data up into discrete chunks of pixels, we could potentially lose a similarity of localized points that lie on the border of those discrete chunks of pixels, hence requiring some thought into the synchronization and communication protocols. 
+While the SIFT algorithm is not innate sequential in nature, there needs to be a lot of synchronization and communication between workers in order to create an accurate mapping of similarities. If we were to do data parallelism, then we must account for the fact that if we split the data up into discrete chunks of pixels, we could potentially lose a similarity of localized points that lie on the border of those discrete chunks of pixels, hence requiring some thought into the synchronization and communication protocols.
 
 
 ### Resources
@@ -64,7 +64,7 @@ Interactive demo that has a participant take two pictures in different poses tha
 
 Analysis of different impacts that task parallelism and data parallelism has on the SIFT algorithm. This will include graphs comparing the speedup of the two different implementations.
 
-### Hope to achieve: 
+### Hope to achieve:
 Achieve 5x speedup for both data parallel and task parallel implementations
 Analysis the impact that different image resolution can have on SIFT algorithm
 
@@ -84,7 +84,7 @@ Analysis the impact that different image resolution can have on SIFT algorithm
 - November 24rd: Implement both data parallelism and task parallelism (basic versions)
   - Hojun will focus on task parallelism. Implement at least 3x Speedup
   - Alvin will focus on data parallelism. Implement at least 3x Speedup
-- November 28th: 
+- November 28th:
   - If we finish extra, we will play with the MPI version, which will be straightforward since image data can be represented as a 2D array
 - December 3rd: Achieve most speedup possible (advanced parallelism) and begin final report
   - Further develop our intial approaches and attempt hybrid of MP and MPI as well as data and task parallelism
