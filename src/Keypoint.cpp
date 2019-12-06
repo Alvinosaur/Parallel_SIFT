@@ -207,8 +207,8 @@ void normalize_vector(float* vec, int N) {
 }
 
 void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
-		std::vector<PointWithAngle> all_points, 
-		std::vector<KeypointFeature> final_keypoints, 
+		std::vector<PointWithAngle> & all_points, 
+		std::vector<KeypointFeature> & final_keypoints, 
 		int rows, int cols, int size) {
 
 	int row, col, new_r, new_c, r_offset, c_offset, region_idx;

@@ -54,8 +54,8 @@ public:
 	void mark_keypoints(Image & src, std::vector<coord> & keypoints);
 
 	void find_keypoint_orientations(std::vector<coord> & keypoints,
-		std::vector<PointWithAngle> all_points, 
-		std::vector<KeypointFeature> keypoints_with_angles, 
+		std::vector<PointWithAngle> & all_points, 
+		std::vector<KeypointFeature> & keypoints_with_angles, 
 		int rows, int cols, int size);
 
 	void store_features(std::vector<KeypointFeature> & kp_features,
