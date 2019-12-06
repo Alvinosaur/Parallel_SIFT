@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <getopt.h>
+#include "mpi.h"
 
 #define HALF 2
 #define QUARTER 4
@@ -37,8 +38,8 @@ int almost_equal(float v1, float v2, float abs_error);
 int reflect(int M, int x);
 
 void print_usage();
-bool get_args(int argc, char** argv, 
-        std::string & img1_path, std::string & img2_path, float* variance, 
+bool get_args(int argc, char** argv,
+        std::string & img1_path, std::string & img2_path, float* variance,
         bool* debug, int* view_index, float* gradient_threshold);
 
 void shrink(Image & src, Image & dst, int scale);
@@ -49,5 +50,10 @@ void allocate_work_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & half_assignments,
         std::vector<range> & quarter_assignments,
         std::vector<range> & eighth_assignments);
+
+void send_to_others(const Image & src, MPI_Request* reqs, int self_rank,
+        range self_range, int scale, int num_tasks);
+void receive_from_others(int* result, MPI_Request* reqs,
+    std::vector<range> & assignments, int self_rank, int scale);
 
 #endif

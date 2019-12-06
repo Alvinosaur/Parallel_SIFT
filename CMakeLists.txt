@@ -9,17 +9,22 @@ set(CFLAGS
 
 add_compile_options(${CFLAGS})
 # NOTE: The below path is for CMU machines
-# set(OpenCV_DIR /usr/local/depot/opencv/share/OpenCV)
+set(OpenCV_DIR /usr/local/depot/opencv/share/OpenCV)
 find_package(OpenCV REQUIRED)
+find_package(MPI REQUIRED)
 
 include_directories(
     include
 	${OpenCV_INCLUDE_DIRS}
+  ${MPI_INCLUDE_PATH}
 )
 
 set(ALL_LIBS
 	${OpenCV_LIBS}
+  ${MPI_LIBRARIES}
 )
+
+
 
 # find_package(OpenMP)
 # if (OPENMP_FOUND)
@@ -57,3 +62,16 @@ target_link_libraries(${PROJECT_NAME}_test_gaussian_blur ${ALL_LIBS})
 # Test OpenMP Compilation
 # add_executable(test_openmp src/test_openmp.cpp)
 
+if(MPI_COMPILE_FLAGS)
+  set_target_properties(${PROJECT_NAME}_main PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+  set_target_properties(${PROJECT_NAME}_test_gaussian_blur PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif()
+
+if(MPI_LINK_FLAGS)
+  set_target_properties(${PROJECT_NAME}_main PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+  set_target_properties(${PROJECT_NAME}_test_gaussian_blur PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+endif()

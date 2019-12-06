@@ -20,7 +20,6 @@ void allocate_work_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & quarter_assignments,
         std::vector<range> & eighth_assignments) {
     int total_pix = rows * cols;
-    int scale;
     int num_pix[3] = {
         total_pix / (HALF * HALF),
         total_pix / (QUARTER * QUARTER),
@@ -33,17 +32,15 @@ void allocate_work_mpi(int rows, int cols, int num_tasks,
         num_pix[2] / num_tasks
     };
 
-    // arrays of start and end indexes, one for each image scale
-    int start[3] = {0};
-    int end[3] = {0};
-
     for (int task = 0; task < num_tasks; task++) {
         for (int scale_i = 0; scale_i < 3; scale_i++) {
-            start[scale_i] = pix_per_task[scale_i] * task;
-            end[scale_i] = pix_per_task[scale_i] * (task + 1);
             range new_range;
-            new_range.first = start[0];
-            new_range.second = end[0];
+            new_range.first = pix_per_task[scale_i] * task;
+            new_range.second = pix_per_task[scale_i] * (task + 1);
+            // account for leftovers if uneven division of pixels btwn tasks
+            if (task == num_tasks-1) {
+              new_range.second += num_pix[scale_i] % num_tasks;
+            }
             if (scale_i == 0) half_assignments.push_back(new_range);
             else if (scale_i == 1) quarter_assignments.push_back(new_range);
             else eighth_assignments.push_back(new_range);
@@ -61,16 +58,16 @@ void receive_from_others(int* result, MPI_Request* reqs,
         new_range = assignments[task];
         size = new_range.second - new_range.first;
         // MPI_Irecv(buffer, count, type, source, tag, comm, request);
-        MPI_Irecv(&result[new_range.first], size, MPI_INT, task, scale, 
+        MPI_Irecv(&result[new_range.first], size, MPI_INT, task, scale,
             MPI_COMM_WORLD, &reqs[task]);
     }
 }
 
-void send_to_others(const Image & src, MPI_Request* reqs, int self_rank, 
+void send_to_others(const Image & src, MPI_Request* reqs, int self_rank,
         range self_range, int scale, int num_tasks) {
     int start = self_range.first;
     int size = self_range.second - start;
-    for (int task = 0; task < assignments.size(); task++) {
+    for (int task = 0; task < num_tasks; task++) {
         if (task == self_rank) continue;  // don't need to send to self
         // MPI_Isend(buffer, count, type, dest, tag, comm, request);
         MPI_Isend(&src.data.data()[start], size, MPI_INT, task, scale,
@@ -122,7 +119,7 @@ void shrink_mpi(const Image & src, Image & dst, const range & start_end,
         }
 
         dst_row = dst_i / src_cols;
-        dst_col = dst_i % src_cols; 
+        dst_col = dst_i % src_cols;
         dst.set(dst_row, dst_col, (int)(
             (float)total_val / (float)(scale * scale)));
     }
@@ -144,8 +141,8 @@ void print_usage() {
 }
 
 
-bool get_args(int argc, char** argv, 
-        std::string & img1_path, std::string & img2_path, float* variance, 
+bool get_args(int argc, char** argv,
+        std::string & img1_path, std::string & img2_path, float* variance,
         bool* debug, int* view_index, float* gradient_threshold) {
     /*
      * Reads in input args from commandline.

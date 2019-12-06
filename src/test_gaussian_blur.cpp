@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
     std::string img1_path, img2_path;
-    if (!get_args(argc, argv, img1_path, img2_path, &variance, &debug, 
+    if (!get_args(argc, argv, img1_path, img2_path, &variance, &debug,
         &view_index, &grad_threshold)) {
         std::cout << "Failed to pass in valid image path with -p1 and -p2";
         std::cout << std::endl;
@@ -40,8 +40,7 @@ int main(int argc, char* argv[]) {
     Image quarter(src1.rows/4, src1.cols/4);
     Image eighth(src1.rows/8, src1.cols/8);
 
-    int num_tasks, tag, rank, remain, num_particles, particles_per_task;
-    int start, end, offset;
+    int num_tasks, tag, rank;
 
     // Init MPI
     MPI_Init(&argc, &argv);
@@ -57,7 +56,7 @@ int main(int argc, char* argv[]) {
     std::vector<range> quarter_assignments;
     std::vector<range> eighth_assignments;
     allocate_work_mpi(src1.rows, src1.cols, num_tasks,
-        half_assignments, quarter_assignments, 
+        half_assignments, quarter_assignments,
         eighth_assignments);
 
     // Each task holds local array to hold results received from other tasks
@@ -65,22 +64,22 @@ int main(int argc, char* argv[]) {
     int quarter_temp[quarter.rows * quarter.cols];
     int eighth_temp[eighth.rows * eighth.cols];
 
-    // Each task performs its own work in parallel and sends results 
+    // Each task performs its own work in parallel and sends results
     // non-blocking and receives non-blocking
     shrink_mpi(src1, half, half_assignments[rank], HALF);
     send_to_others(half, reqs, rank, half_assignments[rank], HALF, num_tasks);
     receive_from_others(half_temp, reqs, half_assignments, rank, HALF);
-    
+
     shrink_mpi(src1, quarter, quarter_assignments[rank], QUARTER);
-    send_to_others(quarter, reqs, rank, quarter_assignments[rank], QUARTER, 
+    send_to_others(quarter, reqs, rank, quarter_assignments[rank], QUARTER,
         num_tasks);
-    receive_from_others(quarter_temp, reqs, stats, quarter_assignments);
+    receive_from_others(quarter_temp, reqs, quarter_assignments, rank, QUARTER);
 
     shrink_mpi(src1, eighth, eighth_assignments[rank], EIGHTH);
     send_to_others(eighth, reqs, rank, eighth_assignments[rank], EIGHTH,
         num_tasks);
-    receive_from_others(eighth_temp, reqs, stats, eighth_assignments);
-    
+    receive_from_others(eighth_temp, reqs, eighth_assignments, rank, EIGHTH);
+
     MPI_Waitall(num_tasks*2, reqs, stats);
 
     if (rank == view_index) {
