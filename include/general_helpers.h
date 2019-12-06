@@ -8,8 +8,13 @@
 #include <string>
 #include <getopt.h>
 
+#define HALF 2
+#define QUARTER 4
+#define EIGHTH 8
+
 extern const std::vector<float> standard_variances;
 typedef std::pair<int, int> coord;
+typedef std::pair<int, int> range;
 
 // print vector of any type, as long as that type can be printed
 template <class data_type>
@@ -36,6 +41,14 @@ bool get_args(int argc, char** argv,
         std::string & img1_path, std::string & img2_path, float* variance, 
         bool* debug, int* view_index, float* gradient_threshold);
 
-void shrink_half(Image & src, Image & dst);
+// void shrink(Image & src, Image & dst, int scale);
+
+void shrink_mpi(const Image & src, Image & dst, const range & start_end,
+    int scale);
+
+void allocate_work_mpi(int rows, int cols, int num_tasks,
+        std::vector<range> & half_assignments,
+        std::vector<range> & quarter_assignments,
+        std::vector<range> & eighth_assignments);
 
 #endif
