@@ -16,17 +16,20 @@ int reflect(int M, int x) {
 void shrink(Image & src, Image & dst, int scale) {
     int total_val;
     int r_offset, c_offset;
-    for (int i = 0; i < src.rows-(scale-1); i+=scale) {
-        for (int j = 0; j < src.cols-(scale-1); j+=scale) {
-            total_val = 0;
-            for (r_offset = 0; r_offset < scale; r_offset++) {
-                for (c_offset = 0; c_offset < scale; c_offset++) {
-                    total_val += src.get(i+r_offset, j+c_offset);
-                }
+    int i, j, k;
+    int max_rows = src.rows-(scale-1);
+    int max_cols = src.cols-(scale-1);
+    for (int k = 0; k < max_rows * max_cols; k+=scale) {
+        j = k % max_cols;
+        i = k / max_cols;
+        total_val = 0;
+        for (r_offset = 0; r_offset < scale; r_offset++) {
+            for (c_offset = 0; c_offset < scale; c_offset++) {
+                total_val += src.get(i+r_offset, j+c_offset);
             }
-            dst.set(i/scale, j/scale, (int)(
-                (float)total_val / (float)(scale * scale)));
         }
+        dst.set(i/scale, j/scale, (int)(
+            (float)total_val / (float)(scale * scale)));
     }
 }
 
