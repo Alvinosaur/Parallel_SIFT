@@ -41,8 +41,7 @@ bool get_args(int argc, char** argv,
         std::string & img1_path, std::string & img2_path, float* variance, 
         bool* debug, int* view_index, float* gradient_threshold);
 
-// void shrink(Image & src, Image & dst, int scale);
-
+void shrink(Image & src, Image & dst, int scale);
 void shrink_mpi(const Image & src, Image & dst, const range & start_end,
     int scale);
 
