@@ -28,9 +28,9 @@ double LoG::find_LoG_images(std::vector<Image> & first_octave_LoG,
     Image quarter(orig.rows/4, orig.cols/4);
     Image eighth(orig.rows/8, orig.cols/8);
 
-    shrink_half(orig, half);
-    shrink_half(half, quarter);
-    shrink_half(quarter, eighth);
+    shrink(orig, half, 2);
+    shrink(orig, quarter, 4);
+    shrink(orig, eighth, 8);
 
     create_blurs(first_octave_LoG, orig);
     create_blurs(second_octave_LoG, half);

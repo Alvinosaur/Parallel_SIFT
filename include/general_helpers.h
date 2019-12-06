@@ -36,6 +36,6 @@ bool get_args(int argc, char** argv,
         std::string & img1_path, std::string & img2_path, float* variance, 
         bool* debug, int* view_index, float* gradient_threshold);
 
-void shrink_half(Image & src, Image & dst);
+void shrink(Image & src, Image & dst, int scale);
 
 #endif

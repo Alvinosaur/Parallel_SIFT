@@ -92,15 +92,15 @@ int main(int argc, char* argv[]){
 void find_keypoint_features(Image & src, cv::Mat & result_features, 
         std::vector<cv::KeyPoint> & cv_keypoints) {
     ///////////////////////////////////// Algorithm BEGIN /////////////////////////////////////
-    double SIFT_TIME = 50000.;
+    double SIFT_TIME;
 
     ///////////////////////////////////// LoG BEGIN /////////////////////////////////////
     // Find Difference of Gaussian Images using LoG
     LoG LoG_processor(src);
     std::vector<Image> octave1_log, octave2_log, octave3_log, octave4_log;
 
-    SIFT_TIME = std::min(SIFT_TIME, LoG_processor.find_LoG_images(
-        octave1_log, octave2_log, octave3_log, octave4_log));
+    SIFT_TIME = LoG_processor.find_LoG_images(
+        octave1_log, octave2_log, octave3_log, octave4_log);
     printf("LoG process time: %.3f ms\n", 1000.f * SIFT_TIME);
     ///////////////////////////////////// LoG END /////////////////////////////////////
 

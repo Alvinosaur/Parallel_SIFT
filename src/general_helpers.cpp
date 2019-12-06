@@ -12,13 +12,20 @@ int reflect(int M, int x) {
     return x;
 }
 
-void shrink_half(Image & src, Image & dst) {
+
+void shrink(Image & src, Image & dst, int scale) {
     int total_val;
-    for (int i = 0; i < src.rows-1; i+=2) {
-        for (int j = 0; j < src.cols-1; j+=2) {
-            total_val = (src.get(i, j) + src.get(i+1, j) + 
-                src.get(i, j+1) + src.get(i+1, j+1));
-            dst.set(i/2, j/2, (int)((float)total_val / 4.0));
+    int r_offset, c_offset;
+    for (int i = 0; i < src.rows-(scale-1); i+=scale) {
+        for (int j = 0; j < src.cols-(scale-1); j+=scale) {
+            total_val = 0;
+            for (r_offset = 0; r_offset < scale; r_offset++) {
+                for (c_offset = 0; c_offset < scale; c_offset++) {
+                    total_val += src.get(i+r_offset, j+c_offset);
+                }
+            }
+            dst.set(i/scale, j/scale, (int)(
+                (float)total_val / (float)(scale * scale)));
         }
     }
 }
