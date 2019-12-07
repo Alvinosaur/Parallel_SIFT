@@ -34,16 +34,6 @@ set(ALL_LIBS
 #endif()
 
 set(${PROJECT_NAME}_SOURCES
-    src/main.cpp
-    src/Image.cpp
-    src/GaussianBlur.cpp
-    src/Keypoint.cpp
-    src/LoG.cpp
-    src/general_helpers.cpp
-)
-
-set(${PROJECT_NAME}_test_gaussian_blur_SOURCES
-    src/test_gaussian_blur.cpp
     src/Image.cpp
     src/GaussianBlur.cpp
     src/Keypoint.cpp
@@ -52,12 +42,25 @@ set(${PROJECT_NAME}_test_gaussian_blur_SOURCES
 )
 
 # Main
-add_executable(${PROJECT_NAME}_main ${${PROJECT_NAME}_SOURCES})
+add_executable(${PROJECT_NAME}_main
+  src/main.cpp
+  ${${PROJECT_NAME}_SOURCES}
+)
 target_link_libraries(${PROJECT_NAME}_main ${ALL_LIBS})
 
-# Test
-add_executable(${PROJECT_NAME}_test_gaussian_blur ${${PROJECT_NAME}_test_gaussian_blur_SOURCES})
+# Test Parallel Gaussian Blur
+add_executable(${PROJECT_NAME}_test_gaussian_blur
+  src/test_gaussian_blur.cpp
+  ${${PROJECT_NAME}_SOURCES}
+)
 target_link_libraries(${PROJECT_NAME}_test_gaussian_blur ${ALL_LIBS})
+
+# Test Parallel Shrink
+add_executable(${PROJECT_NAME}_parallel_shrink
+  src/parallel_shrink.cpp
+  ${${PROJECT_NAME}_SOURCES}
+)
+target_link_libraries(${PROJECT_NAME}_parallel_shrink ${ALL_LIBS})
 
 # Test OpenMP Compilation
 # add_executable(test_openmp src/test_openmp.cpp)
@@ -67,11 +70,15 @@ if(MPI_COMPILE_FLAGS)
     COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
   set_target_properties(${PROJECT_NAME}_test_gaussian_blur PROPERTIES
     COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+  set_target_properties(${PROJECT_NAME}_parallel_shrink PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
 endif()
 
 if(MPI_LINK_FLAGS)
   set_target_properties(${PROJECT_NAME}_main PROPERTIES
     LINK_FLAGS "${MPI_LINK_FLAGS}")
   set_target_properties(${PROJECT_NAME}_test_gaussian_blur PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+  set_target_properties(${PROJECT_NAME}_parallel_shrink PROPERTIES
     LINK_FLAGS "${MPI_LINK_FLAGS}")
 endif()

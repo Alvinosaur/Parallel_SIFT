@@ -40,17 +40,6 @@ int main(int argc, char* argv[]) {
 
     int num_tasks, tag, rank;
 
-    // Precompute weight distributions used for blur convolution
-    Gaussian_Blur gb;
-    std::vector<std::vector<float>> conv_distribs;
-    conv_distribs.reserve(standard_variances.size());
-    for (float var : standard_variances) {
-        std::vector<float> new_distrib;
-        int depth = gb.variance_to_depth(var);
-        gb.generate_binomial_distrib(depth, new_distrib);
-        conv_distribs.push_back(new_distrib);
-    }
-
     // Init MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
@@ -61,30 +50,33 @@ int main(int argc, char* argv[]) {
     MPI_Status stats[num_tasks * 2];
 
     // Each task allocates new work to be done
-    std::vector<range> row_assignments;
-    std::vector<range> col_assignments;
-    allocate_conv_rows_mpi(src1.rows, src1.cols, num_tasks,
-        row_assignments, col_assignments);
+    std::vector<range> half_assignments;
+    std::vector<range> quarter_assignments;
+    std::vector<range> eighth_assignments;
+    allocate_shrink_work_mpi(src1.rows, src1.cols, num_tasks,
+        half_assignments, quarter_assignments,
+        eighth_assignments);
 
     // Each task holds local array to hold results received from other tasks
-    int conv_row_results[src1.rows * src1.cols];
-    int conv_col_results[src1.rows * src1.cols];
+    int half_temp[src1.rows/2 * src1.cols/2];
+    int quarter_temp[src1.rows/4 * src1.cols/4];
+    int eighth_temp[src1.rows/8 * src1.cols/8];
 
     // Each task performs its own work in parallel and sends results
     // non-blocking and receives non-blocking
     shrink_mpi(src1, half_temp, half_assignments[rank], HALF);
-    send_to_others(half_temp, reqs, rank, half_assignments[rank], HALF, num_tasks);
-    receive_from_others(half_temp, reqs, half_assignments, rank, HALF);
+    send_shrink_to_others(half_temp, reqs, rank, half_assignments[rank], HALF, num_tasks);
+    receive_shrink_from_others(half_temp, reqs, half_assignments, rank, HALF);
 
     shrink_mpi(src1, quarter_temp, quarter_assignments[rank], QUARTER);
-    send_to_others(quarter_temp, reqs, rank, quarter_assignments[rank], QUARTER,
+    send_shrink_to_others(quarter_temp, reqs, rank, quarter_assignments[rank], QUARTER,
         num_tasks);
-    receive_from_others(quarter_temp, reqs, quarter_assignments, rank, QUARTER);
+    receive_shrink_from_others(quarter_temp, reqs, quarter_assignments, rank, QUARTER);
 
     shrink_mpi(src1, eighth_temp, eighth_assignments[rank], EIGHTH);
-    send_to_others(eighth_temp, reqs, rank, eighth_assignments[rank], EIGHTH,
+    send_shrink_to_others(eighth_temp, reqs, rank, eighth_assignments[rank], EIGHTH,
         num_tasks);
-    receive_from_others(eighth_temp, reqs, eighth_assignments, rank, EIGHTH);
+    receive_shrink_from_others(eighth_temp, reqs, eighth_assignments, rank, EIGHTH);
 
     printf("Thread %d finished shrink half\n", rank);
     for (int task = 0; task < num_tasks; task++) {

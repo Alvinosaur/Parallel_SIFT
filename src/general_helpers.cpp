@@ -16,7 +16,7 @@ int reflect(int M, int x) {
     return x;
 }
 
-void allocate_work_mpi(int rows, int cols, int num_tasks,
+void allocate_shrink_work_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & half_assignments,
         std::vector<range> & quarter_assignments,
         std::vector<range> & eighth_assignments) {
@@ -52,8 +52,8 @@ void allocate_work_mpi(int rows, int cols, int num_tasks,
     }
 }
 
-void receive_from_others(int* result, MPI_Request* reqs,
-    std::vector<range> & assignments, int self_rank, int scale) {
+void receive_shrink_from_others(int* result, MPI_Request* reqs,
+    std::vector<range> & assignments, int self_rank, int id) {
     // Loop through all other tasks to receive results from them
     range new_range;
     int size, num_tasks = assignments.size();
@@ -62,19 +62,19 @@ void receive_from_others(int* result, MPI_Request* reqs,
         new_range = assignments[task];
         size = new_range.second - new_range.first;
         // MPI_Irecv(buffer, count, type, source, tag, comm, request);
-        MPI_Irecv(&result[new_range.first], size, MPI_INT, task, scale,
+        MPI_Irecv(&result[new_range.first], size, MPI_INT, task, id,
             MPI_COMM_WORLD, &reqs[task]);
     }
 }
 
-void send_to_others(int* data, MPI_Request* reqs, int self_rank,
-        range self_range, int scale, int num_tasks) {
+void send_shrink_to_others(int* data, MPI_Request* reqs, int self_rank,
+        range self_range, int id, int num_tasks) {
     int start = self_range.first;
     int size = self_range.second - start;
     for (int task = 0; task < num_tasks; task++) {
         if (task == self_rank) continue;  // don't need to send to self
         // MPI_Isend(buffer, count, type, dest, tag, comm, request);
-        MPI_Isend(&data[start], size, MPI_INT, task, scale,
+        MPI_Isend(&data[start], size, MPI_INT, task, id,
             MPI_COMM_WORLD, &reqs[task + num_tasks]);
     }
 }
@@ -108,9 +108,6 @@ void shrink_mpi(const Image & src, int* result, const range & start_end,
     int start = start_end.first, end = start_end.second;
     int dst_cols = src.cols / scale;
     int dst_row, dst_col;
-    printf("%d (%d, %d) -> (%d, %d)\n", end-1, (end-1) / dst_cols * scale, 
-        (end-1) % dst_cols * scale, (end-1) / dst_cols, (end-1) % dst_cols);
-    printf("%d\n", dst_cols);
     for (k = start; k < end; k++) {
         j = k % dst_cols * scale;
         i = k / dst_cols * scale;
