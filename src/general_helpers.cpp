@@ -1,4 +1,5 @@
 #include "general_helpers.h"
+#include <stdio.h>
 
 int almost_equal(float v1, float v2, float abs_error) {
     return (v1 - v2) <= abs_error;
@@ -17,11 +18,12 @@ void shrink(Image & src, Image & dst, int scale) {
     int total_val;
     int r_offset, c_offset;
     int i, j, k;
-    int max_rows = src.rows-(scale-1);
-    int max_cols = src.cols-(scale-1);
-    for (int k = 0; k < max_rows * max_cols; k+=scale) {
-        j = k % max_cols;
-        i = k / max_cols;
+    int rows = src.rows / 2;
+    int cols = src.cols / 2;
+    int max_k = rows * cols;
+    for (int k = 0; k < max_k; k++) {
+        j = k % cols * 2;
+        i = k / rows * 2;
         total_val = 0;
         for (r_offset = 0; r_offset < scale; r_offset++) {
             for (c_offset = 0; c_offset < scale; c_offset++) {
@@ -49,8 +51,8 @@ void print_usage() {
 }
 
 
-bool get_args(int argc, char** argv, 
-        std::string & img1_path, std::string & img2_path, float* variance, 
+bool get_args(int argc, char** argv,
+        std::string & img1_path, std::string & img2_path, float* variance,
         bool* debug, int* view_index, float* gradient_threshold) {
     /*
      * Reads in input args from commandline.

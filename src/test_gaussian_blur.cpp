@@ -19,7 +19,7 @@ void shrink_half(Image & src, Image & dst) {
     int total_val;
     for (int i = 0; i < src.rows-1; i+=2) {
         for (int j = 0; j < src.cols-1; j+=2) {
-            total_val = (src.get(i, j) + src.get(i+1, j) + 
+            total_val = (src.get(i, j) + src.get(i+1, j) +
                 src.get(i, j+1) + src.get(i+1, j+1));
             dst.set(i/2, j/2, (int)((float)total_val / 4.0));
         }
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
     std::string img1_path, img2_path;
-    if (!get_args(argc, argv, img1_path, img2_path, &variance, &debug, 
+    if (!get_args(argc, argv, img1_path, img2_path, &variance, &debug,
         &view_index, &grad_threshold)) {
         std::cout << "Failed to pass in valid image path with -p1 and -p2";
         std::cout << std::endl;
@@ -48,10 +48,10 @@ int main(int argc, char* argv[]) {
     Image quarter(src1.rows/4, src1.cols/4);
     Image eighth(src1.rows/8, src1.cols/8);
     shrink(src1, half, 2);
-    shrink(half, quarter, 2);
-    
+    // shrink(half, quarter, 2);
+
     if (debug) cout << "Storing result" << endl;
-    quarter.store_opencv(res_output);
+    half.store_opencv(res_output);
     imwrite( "after_blur_result.jpg", res_output);
     namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );
