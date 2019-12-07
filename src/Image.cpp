@@ -91,8 +91,13 @@ void Image::store_opencv(cv::Mat & dst) {
 }
 
 int Image::get(int row, int col) const {
-    assert(0 <= row && row < rows &&
-           0 <= col && col < cols);
+    if (!(0 <= row && row < rows &&
+           0 <= col && col < cols)) {
+        printf("Row: %d, col: %d out of max (%d, %d)\n",
+            row, col, rows, cols);
+        assert(0 <= row && row < rows &&
+                0 <= col && col < cols);
+    };
     return data[row * cols + col];
 }
 

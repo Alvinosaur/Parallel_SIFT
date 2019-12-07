@@ -2,6 +2,7 @@
 #include "mpi.h"
 
 #define MAX_TASKS 8
+#define MAX_PIX_8 7569
 
 int almost_equal(float v1, float v2, float abs_error) {
     return (v1 - v2) <= abs_error;
@@ -37,9 +38,12 @@ void allocate_work_mpi(int rows, int cols, int num_tasks,
             range new_range;
             new_range.first = pix_per_task[scale_i] * task;
             new_range.second = pix_per_task[scale_i] * (task + 1);
+            if (task == num_tasks-1 && scale_i == 2) {
+                new_range.second = MAX_PIX_8;
+            }
             // account for leftovers if uneven division of pixels btwn tasks
             if (task == num_tasks-1) {
-              new_range.second += num_pix[scale_i] % num_tasks;
+                new_range.second += num_pix[scale_i] % num_tasks;
             }
             if (scale_i == 0) half_assignments.push_back(new_range);
             else if (scale_i == 1) quarter_assignments.push_back(new_range);
@@ -63,14 +67,14 @@ void receive_from_others(int* result, MPI_Request* reqs,
     }
 }
 
-void send_to_others(const Image & src, MPI_Request* reqs, int self_rank,
+void send_to_others(int* data, MPI_Request* reqs, int self_rank,
         range self_range, int scale, int num_tasks) {
     int start = self_range.first;
     int size = self_range.second - start;
     for (int task = 0; task < num_tasks; task++) {
         if (task == self_rank) continue;  // don't need to send to self
         // MPI_Isend(buffer, count, type, dest, tag, comm, request);
-        MPI_Isend(&src.data.data()[start], size, MPI_INT, task, scale,
+        MPI_Isend(&data[start], size, MPI_INT, task, scale,
             MPI_COMM_WORLD, &reqs[task + num_tasks]);
     }
 }
@@ -79,11 +83,12 @@ void shrink(Image & src, Image & dst, int scale) {
     int total_val;
     int r_offset, c_offset;
     int i, j, k;
-    int max_rows = src.rows-(scale-1);
-    int max_cols = src.cols-(scale-1);
-    for (int k = 0; k < max_rows * max_cols; k+=scale) {
-        j = k % max_cols;
-        i = k / max_cols;
+    int rows = src.rows / scale;
+    int cols = src.cols / scale;
+    int max_k = rows * cols;
+    for (int k = 0; k < max_k; k++) {
+        j = k % cols * scale;
+        i = k / cols * scale;
         total_val = 0;
         for (r_offset = 0; r_offset < scale; r_offset++) {
             for (c_offset = 0; c_offset < scale; c_offset++) {
@@ -95,22 +100,20 @@ void shrink(Image & src, Image & dst, int scale) {
     }
 }
 
-void shrink_mpi(const Image & src, Image & dst, const range & start_end,
+void shrink_mpi(const Image & src, int* result, const range & start_end,
         int scale) {
     int total_val;
     int r_offset, c_offset;
     int i, j, k;
-    int max_rows = src.rows-(scale-1);
-    int max_cols = src.cols-(scale-1);
     int start = start_end.first, end = start_end.second;
-    int num_pix = (max_rows * max_cols) / scale;
-    int src_cols = src.cols / scale;
-    int dst_i, dst_row, dst_col;
-
-    for (dst_i = start; dst_i < end; dst_i++) {
-        k = dst_i * scale;
-        j = k % max_cols;
-        i = k / max_cols;
+    int dst_cols = src.cols / scale;
+    int dst_row, dst_col;
+    printf("%d (%d, %d) -> (%d, %d)\n", end-1, (end-1) / dst_cols * scale, 
+        (end-1) % dst_cols * scale, (end-1) / dst_cols, (end-1) % dst_cols);
+    printf("%d\n", dst_cols);
+    for (k = start; k < end; k++) {
+        j = k % dst_cols * scale;
+        i = k / dst_cols * scale;
         total_val = 0;
         for (r_offset = 0; r_offset < scale; r_offset++) {
             for (c_offset = 0; c_offset < scale; c_offset++) {
@@ -118,11 +121,12 @@ void shrink_mpi(const Image & src, Image & dst, const range & start_end,
             }
         }
 
-        dst_row = dst_i / src_cols;
-        dst_col = dst_i % src_cols;
-        dst.set(dst_row, dst_col, (int)(
-            (float)total_val / (float)(scale * scale)));
+        dst_row = i / scale;
+        dst_col = j / scale;
+        result[dst_row*dst_cols + dst_col] = (int)(
+            (float)total_val / (float)(scale * scale));
     }
+
 }
 
 void print_usage() {

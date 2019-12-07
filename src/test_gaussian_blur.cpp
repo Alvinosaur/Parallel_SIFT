@@ -36,9 +36,6 @@ int main(int argc, char* argv[]) {
     cv::Mat src1_mat = cv::imread(img1_path.c_str(),
         CV_LOAD_IMAGE_GRAYSCALE);
     Image src1(src1_mat);
-    Image half(src1.rows/2, src1.cols/2);
-    Image quarter(src1.rows/4, src1.cols/4);
-    Image eighth(src1.rows/8, src1.cols/8);
 
     int num_tasks, tag, rank;
 
@@ -60,38 +57,48 @@ int main(int argc, char* argv[]) {
         eighth_assignments);
 
     // Each task holds local array to hold results received from other tasks
-    int half_temp[half.rows * half.cols];
-    int quarter_temp[quarter.rows * quarter.cols];
-    int eighth_temp[eighth.rows * eighth.cols];
+    int half_temp[src1.rows/2 * src1.cols/2];
+    int quarter_temp[src1.rows/4 * src1.cols/4];
+    int eighth_temp[src1.rows/8 * src1.cols/8];
 
     // Each task performs its own work in parallel and sends results
     // non-blocking and receives non-blocking
-    shrink_mpi(src1, half, half_assignments[rank], HALF);
-    send_to_others(half, reqs, rank, half_assignments[rank], HALF, num_tasks);
+    shrink_mpi(src1, half_temp, half_assignments[rank], HALF);
+    send_to_others(half_temp, reqs, rank, half_assignments[rank], HALF, num_tasks);
     receive_from_others(half_temp, reqs, half_assignments, rank, HALF);
 
-    shrink_mpi(src1, quarter, quarter_assignments[rank], QUARTER);
-    send_to_others(quarter, reqs, rank, quarter_assignments[rank], QUARTER,
+    shrink_mpi(src1, quarter_temp, quarter_assignments[rank], QUARTER);
+    send_to_others(quarter_temp, reqs, rank, quarter_assignments[rank], QUARTER,
         num_tasks);
     receive_from_others(quarter_temp, reqs, quarter_assignments, rank, QUARTER);
 
-    shrink_mpi(src1, eighth, eighth_assignments[rank], EIGHTH);
-    send_to_others(eighth, reqs, rank, eighth_assignments[rank], EIGHTH,
+    shrink_mpi(src1, eighth_temp, eighth_assignments[rank], EIGHTH);
+    send_to_others(eighth_temp, reqs, rank, eighth_assignments[rank], EIGHTH,
         num_tasks);
     receive_from_others(eighth_temp, reqs, eighth_assignments, rank, EIGHTH);
 
-    MPI_Waitall(num_tasks*2, reqs, stats);
+    printf("Thread %d finished shrink half\n", rank);
+    for (int task = 0; task < num_tasks; task++) {
+        if (task == rank) continue;
+        MPI_Wait(&reqs[task],&stats[task]);
+    }
+
+    Image half(src1.rows/2, src1.cols/2, half_temp);
+    Image quarter(src1.rows/4, src1.cols/4, quarter_temp);
+    Image eighth(src1.rows/8, src1.cols/8, eighth_temp);
 
     if (rank == view_index) {
         if (debug) cout << "Storing result" << endl;
         quarter.store_opencv(res_output);
         imwrite( "after_blur_result.jpg", res_output);
-        namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
         imshow( "Blurred pikachu!", res_output );
         waitKey(0);
     }
 
-    MPI_Waitall(num_tasks*2, reqs, stats);
+    for (int task = 0; task < num_tasks; task++) {
+        if (task == rank) continue;
+        MPI_Wait(&reqs[task],&stats[task]);
+    }
     MPI_Finalize();
     return 0;
 }

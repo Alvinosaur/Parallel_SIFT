@@ -43,7 +43,7 @@ bool get_args(int argc, char** argv,
         bool* debug, int* view_index, float* gradient_threshold);
 
 void shrink(Image & src, Image & dst, int scale);
-void shrink_mpi(const Image & src, Image & dst, const range & start_end,
+void shrink_mpi(const Image & src, int* result, const range & start_end,
     int scale);
 
 void allocate_work_mpi(int rows, int cols, int num_tasks,
@@ -51,7 +51,7 @@ void allocate_work_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & quarter_assignments,
         std::vector<range> & eighth_assignments);
 
-void send_to_others(const Image & src, MPI_Request* reqs, int self_rank,
+void send_to_others(int* data, MPI_Request* reqs, int self_rank,
         range self_range, int scale, int num_tasks);
 void receive_from_others(int* result, MPI_Request* reqs,
     std::vector<range> & assignments, int self_rank, int scale);
