@@ -18,12 +18,11 @@ void shrink(Image & src, Image & dst, int scale) {
     int total_val;
     int r_offset, c_offset;
     int i, j, k;
-    int rows = src.rows / 2;
     int cols = src.cols / 2;
     int max_k = rows * cols;
     for (int k = 0; k < max_k; k++) {
         j = k % cols * 2;
-        i = k / rows * 2;
+        i = k / cols * 2;
         total_val = 0;
         for (r_offset = 0; r_offset < scale; r_offset++) {
             for (c_offset = 0; c_offset < scale; c_offset++) {
