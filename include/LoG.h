@@ -13,7 +13,7 @@ public:
                         std::vector<Image> & second_octave_LoG, 
                         std::vector<Image> & third_octave_LoG,
                         std::vector<Image> & fourth_octave_LoG);
-    void create_blurs(std::vector<Image> & result, Image & src);
+    double create_blurs(std::vector<Image> & result, Image & src);
 };
 
 #endif

@@ -13,7 +13,6 @@
 #include "LoG.h"
 #include "Image.h"
 #include "general_helpers.h"
-#include <chrono>
 #include <omp.h>
 
 
@@ -24,8 +23,8 @@ int view_index = 0;
 float grad_threshold = 0;
 float intensity_threshold = 1;
 
-void find_keypoint_features(Image & src, cv::Mat & result_features, 
-    std::vector<cv::KeyPoint> & cv_keypoints);
+double find_keypoint_features(Image & src, cv::Mat & result_features, 
+    std::vector<cv::KeyPoint> & cv_keypoints, int imgID);
 
 int main(int argc, char* argv[]){
     float variance = 1;
@@ -41,6 +40,8 @@ int main(int argc, char* argv[]){
         exit(-1);
     };
 
+    double TIME = 0.0;
+
     cv::Mat src1_mat = cv::imread(img1_path.c_str(),
         CV_LOAD_IMAGE_GRAYSCALE);
     cv::Mat src2_mat = cv::imread(img2_path.c_str(),
@@ -50,52 +51,56 @@ int main(int argc, char* argv[]){
 
     cv::Mat res_output, features1, features2;
     std::vector<cv::KeyPoint> keypoints1, keypoints2;
-    find_keypoint_features(src1, features1, keypoints1);
-    find_keypoint_features(src2, features2, keypoints2);
+    TIME += find_keypoint_features(src1, features1, keypoints1, 1);
+    // TIME += find_keypoint_features(src2, features2, keypoints2, 2);
 
-    // //-- Step 3: Matching descriptor vectors using FLANN matcher
-    cv::FlannBasedMatcher matcher;
-    std::vector< cv::DMatch > matches;
-    matcher.match( features1, features2, matches );
+    // // //-- Step 3: Matching descriptor vectors using FLANN matcher
+    // cv::FlannBasedMatcher matcher;
+    // std::vector< cv::DMatch > matches;
+    // matcher.match( features1, features2, matches );
 
-    double max_dist = 0; double min_dist = 100;
+    // double max_dist = 0; double min_dist = 100;
 
-    // //-- Quick calculation of max and min distances between keypoints
-    for( int i = 0; i < features1.rows; i++ )
-    { double dist = matches[i].distance;
-        if( dist < min_dist ) min_dist = dist;
-        if( dist > max_dist ) max_dist = dist;
-    }
+    // // //-- Quick calculation of max and min distances between keypoints
+    // for( int i = 0; i < features1.rows; i++ )
+    // { double dist = matches[i].distance;
+    //     if( dist < min_dist ) min_dist = dist;
+    //     if( dist > max_dist ) max_dist = dist;
+    // }
 
-    //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
-    //-- or a small arbitary value ( 0.02 ) in the event that min_dist is very
-    //-- small)
-    //-- PS.- radiusMatch can also be used here.
-    std::vector< cv::DMatch > good_matches;
+    // //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
+    // //-- or a small arbitary value ( 0.02 ) in the event that min_dist is very
+    // //-- small)
+    // //-- PS.- radiusMatch can also be used here.
+    // std::vector< cv::DMatch > good_matches;
 
-    for( int i = 0; i < features1.rows; i++ )
-    { if( matches[i].distance <= max(2*min_dist, 0.02) )
-        { good_matches.push_back( matches[i]); }
-    }
+    // for( int i = 0; i < features1.rows; i++ )
+    // { if( matches[i].distance <= max(2*min_dist, 0.02) )
+    //     { good_matches.push_back( matches[i]); }
+    // }
 
-    //-- Draw only "good" matches
-    drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
-        good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
-        vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+    // //-- Draw only "good" matches
+    // drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
+    //     good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
+    //     vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
-    imwrite( "after_blur_result.jpg", res_output);
-    cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
-    imshow( "Blurred pikachu!", res_output );
-    cv::waitKey(0);
+    // printf("OVERALL TIME:                          %.3f ms\n", 1000.f * TIME);
+
+    // imwrite( "after_blur_result.jpg", res_output);
+    // imshow( "Blurred pikachu!", res_output );
+    // cv::waitKey(0);
     return 0;
 }
 
-void find_keypoint_features(Image & src, cv::Mat & result_features, 
-        std::vector<cv::KeyPoint> & cv_keypoints) {
+double find_keypoint_features(Image & src, cv::Mat & result_features, 
+        std::vector<cv::KeyPoint> & cv_keypoints, int imgID) {
     ///////////////////////////////////// Algorithm BEGIN /////////////////////////////////////
     double SIFT_TIME = 50000.;
-    using namespace std::chrono; 
-    auto start = high_resolution_clock::now(); 
+    double TOTAL_TIME = 0.0;
+    double ADD_TIME = 0.0;
+
+    printf("/////////////////////////////////////////////////////////////////////////////////\n");
+    printf("SIFT algorithm for image%d\n", imgID);
 
 
     ///////////////////////////////////// LoG BEGIN /////////////////////////////////////
@@ -103,9 +108,10 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     LoG LoG_processor(src);
     std::vector<Image> octave1_log, octave2_log, octave3_log, octave4_log;
 
-    SIFT_TIME = std::min(SIFT_TIME, LoG_processor.find_LoG_images(
-        octave1_log, octave2_log, octave3_log, octave4_log));
-    printf("LoG process time: %.3f ms\n", 1000.f * SIFT_TIME);
+    ADD_TIME = SIFT_TIME = LoG_processor.find_LoG_images(
+        octave1_log, octave2_log, octave3_log, octave4_log);
+    printf("LoG process time:                      %.3f ms\n", 1000.f * SIFT_TIME);
+    TOTAL_TIME += ADD_TIME;
     ///////////////////////////////////// LoG END /////////////////////////////////////
 
 
@@ -114,8 +120,9 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     Keypoint kp_finder(src, grad_threshold, intensity_threshold);
     std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
 
-    SIFT_TIME = std::min(SIFT_TIME, kp_finder.find_keypoints(octave1_log, octave1_kp));
-    printf("keypoint_find for octave1 time: %.3f ms\n", 1000.f * SIFT_TIME);
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave1_log, octave1_kp);
+    TOTAL_TIME += ADD_TIME;
+    printf("keypoint_find for octave1 time:        %.3f ms\n", 1000.f * SIFT_TIME);
     // kp_finder.find_keypoints(octave1_log, octave1_kp);
     // kp_finder.find_keypoints(octave2_log, octave2_kp);
     // kp_finder.find_keypoints(octave3_log, octave3_kp);
@@ -128,17 +135,36 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     std::vector<coord> keypoints;
 
     std::vector<PointWithAngle> points_with_angle;
-    SIFT_TIME = std::min(SIFT_TIME, kp_finder.find_corners_gradients(
-        octave1_kp[view_index], keypoints, points_with_angle));
-    printf("corner detection for octave1 time: %.3f ms\n", 1000.f * SIFT_TIME);
+    ADD_TIME = SIFT_TIME = kp_finder.find_corners_gradients(
+        octave1_kp[view_index], keypoints, points_with_angle);
+    TOTAL_TIME += ADD_TIME;
+    printf("corner detection for octave1 time:     %.3f ms\n", 1000.f * SIFT_TIME);
+    printf("keypoints: %d\n", keypoints.size());
 
     std::vector<float> kp_gradients;
 
     std::vector<KeypointFeature> keypoint_features;
-    kp_finder.find_keypoint_orientations(keypoints, points_with_angle, 
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoint_orientations(keypoints, points_with_angle, 
         keypoint_features, src.rows, src.cols, standard_variances[2]);
+    TOTAL_TIME += ADD_TIME;
+    printf("keypoint orientation for octave1 time: %.3f ms\n", 1000.f * SIFT_TIME);
 
-    kp_finder.store_keypoints(keypoint_features, cv_keypoints, 1, src.cols);
+    ADD_TIME = SIFT_TIME = kp_finder.store_keypoints(keypoint_features, cv_keypoints, 1, src.cols);
+    TOTAL_TIME += ADD_TIME;
+    printf("keypoint storing for octave1 time:     %.3f ms\n", 1000.f * SIFT_TIME);
+
+    ADD_TIME = SIFT_TIME = kp_finder.store_features(keypoint_features, result_features);
+    TOTAL_TIME += ADD_TIME;
+    printf("feature generation for octave1 time:   %.3f ms\n", 1000.f * SIFT_TIME);
+
+    printf("TOTAL_TIME:                            %.3f ms\n", 1000.f * TOTAL_TIME);
+    printf("/////////////////////////////////////////////////////////////////////////////////\n");
+
+    cv::Mat res_output;
+    octave1_log[3].store_opencv(res_output);
+    imwrite( "after_blur_result.jpg", res_output);
+    imshow( "Blurred pikachu!", res_output );
+    cv::waitKey(0);
     
-    kp_finder.store_features(keypoint_features, result_features);
+    return TOTAL_TIME;
 }

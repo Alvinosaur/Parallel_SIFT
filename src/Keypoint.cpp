@@ -30,11 +30,9 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 	// int extrema[rows * cols];
 	// memset(extrema, 0, rows * cols);
 
-
-    #pragma omp parallel for schedule(dynamic)
 	for (int i = 0; i < rows * cols; i++) {
 
-		int c = i % cols;
+		c = i % cols;
 		if (c == cols -1 && r != rows -1) r++;
 
 		cur_val = cur_img.get(r, c);
@@ -72,11 +70,65 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 				}
 			}
 		}
-		// set as max value if max, else set 0
-		// if (is_max) printf("Found max: %d\n", cur_val);
-		res.data.push_back(cur_val * (is_max || is_min));		
+
+		res.data.push_back(cur_val * (is_max || is_min));	
 		
 	}
+
+  //   #pragma omp parallel
+  //   {
+  //   	std::vector<int> private_data;
+  //   	#pragma omp for schedule(static) nowait
+  //   	for (int i = 0; i < rows * cols; i++) {
+
+		// 	c = i % cols;
+		// 	if (c == cols -1 && r != rows -1) r++;
+
+		// 	cur_val = cur_img.get(r, c);
+		// 	is_max = 1;
+		// 	is_min = 1;
+		// 	// avg_val += abs(cur_val);
+		// 	is_intense = (abs(cur_val) > intensity_thresh);
+
+		// 	// printf("%d \n", is_intense);
+		// 	if (!is_intense) {
+		// 		// res.data.push_back(0);
+		// 		private_data.push_back(0);
+		// 		continue;
+		// 	}
+
+		// 	// Iterate through a 3x3 window of neighboring pixels
+		// 	for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
+		// 		new_r = reflect(rows, r + r_offset);
+		// 		for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
+		// 			new_c = reflect(cols, c + c_offset);
+
+		// 			// don't compare pixel to itself
+
+		// 			assert(0 <= new_r < rows);
+		// 			assert(0 <= new_c < cols);
+		// 			// compare neighbors of prev, cur, and next scales
+		// 			is_max &= (cur_val > prev_img.get(new_r, new_c));
+		// 			is_max &= (cur_val > next_img.get(new_r, new_c));
+
+		// 			is_min &= (cur_val < prev_img.get(new_r, new_c));
+		// 			is_min &= (cur_val < next_img.get(new_r, new_c));
+
+		// 			if (new_r != r && new_c != c) {
+		// 				is_max &= (cur_val > cur_img.get(new_r, new_c));
+		// 				is_min &= (cur_val < cur_img.get(new_r, new_c));
+		// 			}
+		// 		}
+		// 	}
+
+		// 	// res.data.push_back(cur_val * (is_max || is_min));	
+		// 	private_data.push_back(cur_val * (is_max || is_min));
+			
+		// }
+
+		// res.data.insert(res.data.end(), private_data.begin(), private_data.end());
+  //   }
+	
 
 	printf("Average intensity: %f\n", avg_val / (float)cur_img.data.size());
 }
@@ -91,18 +143,25 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 	Image kp1(differences[0].rows, differences[0].cols);
 	Image kp2(differences[0].rows, differences[0].cols);
 
-	#pragma omp parallel 
-    {
-        #pragma omp single
-        {
-            #pragma omp task
-			getMaxes(differences[0], differences[1], differences[2], kp1);
-			#pragma omp task
-			getMaxes(differences[1], differences[2], differences[3], kp2);
-		}
-	}
+	// #pragma omp parallel 
+ //    {
+ //        #pragma omp single
+ //        {
+ //            #pragma omp task
+ //            {
+ //            	getMaxes(differences[0], differences[1], differences[2], kp1);
 
+ //            }
+	// 		#pragma omp task
+	// 		{
+	// 			getMaxes(differences[1], differences[2], differences[3], kp2);
 
+	// 		}
+	// 	}
+	// }
+
+	getMaxes(differences[0], differences[1], differences[2], kp1);
+	getMaxes(differences[1], differences[2], differences[3], kp2);
 	keypoint_results.push_back(kp1);
 	keypoint_results.push_back(kp2);
 
@@ -149,11 +208,8 @@ double Keypoint::find_corners_gradients(
 		const Image & src, std::vector<coord> & keypoints,
 		std::vector<PointWithAngle> & points_with_angle) {
 	double startTime = CycleTimer::currentSeconds();
-<<<<<<< HEAD
 	int r = 0, c = 0;
-=======
-	int r, c;
->>>>>>> master
+
 	// previous and next adjacent pixel values
 	int prev_rp, next_rp, prev_cp, next_cp;
 	int grad_x, grad_y;
@@ -164,8 +220,10 @@ double Keypoint::find_corners_gradients(
 
 	// #pragma omp parallel shared(points_with_angle)
 	for (int i = 0; i < rows * cols; i++) {
-		int c = i % cols;
+		c = i % cols;
 		if (c == cols -1 && r != rows -1) r++;
+
+
 		prev_rp = src.get(reflect(rows, r-1), c);
 		next_rp = src.get(reflect(rows, r+1), c);
 		prev_cp = src.get(r, reflect(cols, c-1));
@@ -185,6 +243,7 @@ double Keypoint::find_corners_gradients(
 			keypoints.push_back(new_kp);
 		}
 	}
+
 
 	double endTime = CycleTimer::currentSeconds();
     double overallTime = endTime - startTime;
@@ -240,10 +299,13 @@ void normalize_vector(float* vec, int N) {
 	}
 }
 
-void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
-		std::vector<PointWithAngle> all_points, 
-		std::vector<KeypointFeature> final_keypoints, 
+double Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
+		std::vector<PointWithAngle> & all_points, 
+		std::vector<KeypointFeature> & final_keypoints, 
 		int rows, int cols, int size) {
+
+	double startTime = CycleTimer::currentSeconds();
+
 
 	int row, col, new_r, new_c, r_offset, c_offset, region_idx;
 	int ang, ang_bin;
@@ -254,7 +316,8 @@ void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
 	double normalizer = dist_norm(NUM_REGIONS, NUM_REGIONS);
 
 	// find weighted average of all adjacent angles and normalize
-	for (coord kp : keypoints) {
+	for (int i = 0; i < keypoints.size(); i++){
+		coord kp = keypoints[i];
 		row = kp.first;
 		col = kp.second;
 		total_magnitude = 0;
@@ -306,25 +369,47 @@ void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
 		normalize_vector(kp_feature.grad_histogram, FEATURE_VEC_SIZE);
 		final_keypoints.push_back(kp_feature);
 	}
+
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
-void Keypoint::store_features(std::vector<KeypointFeature> & kp_features,
+
+double Keypoint::store_features(std::vector<KeypointFeature> & kp_features,
 		cv::Mat & descriptors) {
+
+	double startTime = CycleTimer::currentSeconds();
+
 	int rows = kp_features.size();
 	int cols = FEATURE_VEC_SIZE;
 	descriptors.create(rows, cols, CV_32F);
     int idx;
-    for (int r = 0; r < rows; r++) {
-        for (int c = 0; c < cols; c++) {
-            descriptors.at<float>(r, c) = kp_features[r].grad_histogram[c];
-        }
+    int c, r;
+
+    for (int i = 0; i < rows * cols; i++) {
+		c = i % cols;
+		if (c == cols -1 && r != rows -1) r++;
+        descriptors.at<float>(r, c) = kp_features[r].grad_histogram[c];
+
     }
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
-void Keypoint::store_keypoints(std::vector<KeypointFeature> & keypoints_src,
+double Keypoint::store_keypoints(std::vector<KeypointFeature> & keypoints_src,
 		std::vector<cv::KeyPoint> & cv_keypoints_dst, int octave, int cols) {
+
+	double startTime = CycleTimer::currentSeconds();
+
 	int id;
-	for (KeypointFeature kp : keypoints_src) {
+	// printf("keypoints in store: %d\n", keypoints_src.size());
+
+	for (int i = 0; i < keypoints_src.size(); i++) {
+		KeypointFeature kp = keypoints_src[i];
 		cv::Point2f pos;
 		pos.x = kp.pos.second;
 		pos.y = kp.pos.first;
@@ -332,4 +417,8 @@ void Keypoint::store_keypoints(std::vector<KeypointFeature> & keypoints_src,
 		cv::KeyPoint cv_kp(pos, kp.size, kp.angle, kp.magnitude, id);
 		cv_keypoints_dst.push_back(cv_kp);
 	}
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }

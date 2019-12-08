@@ -3,6 +3,8 @@
 #include <assert.h>
 #include "general_helpers.h"
 #include <cmath>
+#include "CycleTimer.h"
+
 
 #define DEBUG 1
 #define MAX_VARIANCE 4
@@ -37,16 +39,20 @@ void Gaussian_Blur::generate_binomial_distrib(int n,
     if (DEBUG) assert(almost_equal(sum<float>(new_distrib), 1.0, MAX_ERROR));
 }
 
-void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
+
+double Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
+
+    double startTime = CycleTimer::currentSeconds();
+
     if (var == 0) {
         std::cout << "NOTE: Input variance = 0, no change to image";
         std::cout << std::endl;
-        return;
+        return 0.0;
     }
     else if (var >= MAX_VARIANCE) {
         std::cout << "Desired variance too high! Max is " << MAX_VARIANCE;
         std::cout << std::endl;
-        return;
+        return 0.0;
     }
     int row, col, rows = img.rows, cols = img.cols;
     float temp[rows * cols];  // result from vertical convolution
@@ -58,54 +64,49 @@ void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
 
 
     // along y - direction
-    float sumx, sumy, sum;
-    int y = 0;
+    float sum;
+    int x = 0,y = 0;
+    int x1, y1, shift, new_val; 
 
     // #pragma omp parallel for shared(new_img, temp, distrib) reduction(+: sumy) reduction(+: sumx)
     // #pragma omp parallel for schedule(dynamic)
-    // for (int j = 0; j < rows * cols; j++) {
-    //     int x1, y1, shift, new_val; 
-    //     int x = j % cols;
-    //     if (x == cols -1 && y != rows-1) y++;
+    // #pragma omp parallel for reduction(+: sum)
+    // #pragma omp parallel 
+    // {
+    //     #pragma omp for schedule(static) nowait reduction(+: sum)
+    //     for (int j = 0; j < rows * cols; j++) {
+    //         int x1, y1, shift, new_val; 
+    //         int x = j % cols;
+    //         if (x == cols -1 && y != rows-1) y++;
 
-    //     sumy = 0.0;
-    //     for(int i = 0; i < K; i++){
-    //         shift = i - mean_K;
-    //         y1 = reflect(rows, y + shift);
-    //         sumy += distrib[i] * (float)img.get(y1, x);
+    //         sum = 0.0;
+    //         for(int i = 0; i < K; i++){
+    //             shift = i - mean_K;
+    //             y1 = reflect(rows, y + shift);
+    //             sum += distrib[i] * (float)img.get(y1, x);
+    //         }
+    //         temp[y*cols + x] = sum;
     //     }
-    //     temp[y*cols + x] = sumy;
-
-    //     sumx = 0.0;
-    //     for(int i = 0; i < K; i++){
-    //         shift = i - mean_K;
-    //         x1 = reflect(cols, x + shift);
-    //         sumx += distrib[i] * temp[y*cols + x1];
-    //     }
-    //     new_val = (int)sumx;
-    //     new_img.set(y, x, new_val);
     // }
-    
+
+    // printf("%d %d\n", rows, cols);
 
     for (int j = 0; j < rows * cols; j++) {
-        int x1, y1, shift, new_val; 
-        int x = j % cols;
+        x = j % cols;
         if (x == cols -1 && y != rows-1) y++;
 
-        sumy = 0.0;
+        sum = 0.0;
         for(int i = 0; i < K; i++){
             shift = i - mean_K;
             y1 = reflect(rows, y + shift);
-            sumy += distrib[i] * (float)img.get(y1, x);
+            sum += distrib[i] * (float)img.get(y1, x);
         }
-        temp[y*cols + x] = sumy;
+        temp[y*cols + x] = sum;
     }
-    // along x - direction
+
     y = 0;
-    // #pragma omp parallel for reduction(+: sum)
     for (int j = 0; j < rows * cols; j++) {
-        int x1, y1, shift, new_val; 
-        int x = j % cols;
+        x = j % cols;
         if (x == cols -1 && y != rows-1) y++;
 
         sum = 0.0;
@@ -117,7 +118,701 @@ void Gaussian_Blur::convolve(Image & img, Image &new_img, float var) {
         new_val = (int)sum;
         new_img.set(y, x, new_val);
     }
+    
 
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 
 }
 
+double Gaussian_Blur::convolve_half(Image & img, Image &new_img, float var, int n) {
+
+    double startTime = CycleTimer::currentSeconds();
+
+    if (var == 0) {
+        std::cout << "NOTE: Input variance = 0, no change to image";
+        std::cout << std::endl;
+        return 0.0;
+    }
+    else if (var >= MAX_VARIANCE) {
+        std::cout << "Desired variance too high! Max is " << MAX_VARIANCE;
+        std::cout << std::endl;
+        return 0.0;
+    }
+    int row, col, rows = img.rows, cols = img.cols;
+    float temp[rows * cols];  // result from vertical convolution
+    std::vector<float> distrib;  // one-dimensional binomial distribution
+    int depth = variance_to_depth(var);
+    generate_binomial_distrib(depth, distrib);
+    int K = distrib.size();
+    int mean_K = K / 2;
+
+
+    int middle = (rows * cols) / 2;
+
+    int x = 0, y = 0, x1, y1, shift, new_val; 
+    int sum;
+
+    if (n == 0) {
+        y = 0;
+        for (int j = 0; j < middle -1; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows/2)) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp[y*cols + x] = sum;
+        }
+        // #pragma parallel
+        // {
+        //     int x = 0, y = 0, x1, y1, shift, new_val; 
+        //     int sum;
+
+        //     #pragma omp for schedule(static)
+        //     for (int j = 0; j < middle -1; j++) {
+        //         x = j % cols;
+        //         if (x == cols -1 && y != (rows/2)) y++;
+
+        //         sum = 0.0;
+        //         for(int i = 0; i < K; i++){
+        //             shift = i - mean_K;
+        //             y1 = reflect(rows, y + shift);
+        //             sum += distrib[i] * (float)img.get(y1, x);
+        //         }
+        //         temp[y*cols + x] = sum;
+        //     }
+        // }
+        
+    } else if (n == 1){
+        y = rows/2 + 1;
+        for (int j = middle; j < (rows * cols); j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows-1) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp[y*cols + x] = sum;
+        }
+        // #pragma parallel
+        // {
+        //     int x = 0, y = rows/2 +1, x1, y1, shift, new_val; 
+        //     int sum;
+            
+        //     #pragma omp for schedule(static)
+        //       for (int j = middle; j < (rows * cols); j++) {
+        //             x = j % cols;
+        //             if (x == cols -1 && y != rows-1) y++;
+
+        //         sum = 0.0;
+        //         for(int i = 0; i < K; i++){
+        //             shift = i - mean_K;
+        //             y1 = reflect(rows, y + shift);
+        //             sum += distrib[i] * (float)img.get(y1, x);
+        //         }
+        //         temp[y*cols + x] = sum;
+        //     }
+
+        // }
+    }
+
+
+    if (n == 0) {
+        y = 0;
+        for (int j = 0; j < middle -1; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows/2)) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+        // #pragma omp parallel
+        // {
+        //     int x = 0, y = 0, x1, y1, shift, new_val; 
+        //     int sum;
+
+        //     #pragma omp for schedule(static)
+                // for (int j = 0; j < middle -1; j++) {
+                //     x = j % cols;
+                //     if (x == cols -1 && y != (rows/2)) y++;
+
+        //         sum = 0.0;
+        //         for(int i = 0; i < K; i++){
+        //             shift = i - mean_K;
+        //             x1 = reflect(cols, x + shift);
+        //             sum += distrib[i] * temp[y*cols + x1];
+        //         }
+        //         new_val = (int)sum;
+        //         new_img.set(y, x, new_val);
+        //     }
+
+        // }
+    } else {
+        y = rows/2 + 1;
+        for (int j = middle; j < (rows * cols); j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows-1) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+        // #pragma omp parallel
+        // {
+        //     int x = 0, y = rows / 2 + 1, x1, y1, shift, new_val; 
+        //     int sum;
+
+        //     #pragma omp for schedule(static)
+                // for (int j = middle; j < (rows * cols); j++) {
+                //     x = j % cols;
+                //     if (x == cols -1 && y != rows-1) y++;
+
+        //         sum = 0.0;
+        //         for(int i = 0; i < K; i++){
+        //             shift = i - mean_K;
+        //             x1 = reflect(cols, x + shift);
+        //             sum += distrib[i] * temp[y*cols + x1];
+        //         }
+        //         new_val = (int)sum;
+        //         new_img.set(y, x, new_val);
+        //     }
+        // }
+
+    }
+
+
+    
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
+
+}
+
+
+double Gaussian_Blur::convolve_quarters_y(Image & img, float temp_temp[], Image &new_img, 
+                                          std::vector<float> distrib, float var, int n) {
+
+    double startTime = CycleTimer::currentSeconds();
+
+    if (var == 0) {
+        std::cout << "NOTE: Input variance = 0, no change to image";
+        std::cout << std::endl;
+        return 0.0;
+    }
+    else if (var >= MAX_VARIANCE) {
+        std::cout << "Desired variance too high! Max is " << MAX_VARIANCE;
+        std::cout << std::endl;
+        return 0.0;
+    }
+    int rows = img.rows, cols = img.cols;
+
+    int K = distrib.size();
+    int mean_K = K / 2;
+
+    int middle = (rows * cols) / 2;
+    int quarter = (rows * cols) / 4;
+
+    int x = 0, y = 0, y1, shift, new_val; 
+    int sum;
+    
+
+    if (n == 0) {
+        y = 0;
+        for (int j = 0; j < quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows/4) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+        
+    } else if (n == 1) {
+        y = rows/4 ;
+        for (int j = quarter; j < middle; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows/2) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+
+    } else if (n == 2) {
+        y = rows/2;
+        for (int j = middle; j < middle + quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 3)/4) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+    } else if (n == 3) {
+        y = (rows * 3) / 4;
+        for (int j = middle + quarter; j < (rows * cols); j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows-1) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+
+    }
+    
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
+
+}
+
+
+double Gaussian_Blur::convolve_quarters_x(Image & img, float temp_temp[], Image &new_img, 
+                                          std::vector<float> distrib, float var, int n) {
+
+    double startTime = CycleTimer::currentSeconds();
+
+    if (var == 0) {
+        std::cout << "NOTE: Input variance = 0, no change to image";
+        std::cout << std::endl;
+        return 0.0;
+    }
+    else if (var >= MAX_VARIANCE) {
+        std::cout << "Desired variance too high! Max is " << MAX_VARIANCE;
+        std::cout << std::endl;
+        return 0.0;
+    }
+    int row, col, rows = img.rows, cols = img.cols;
+    int K = distrib.size();
+    int mean_K = K / 2;
+
+
+    int middle = (rows * cols) / 2;
+    int quarter = (rows * cols) / 4;
+
+    int x = 0, y = 0, x1,  shift, new_val; 
+    int sum;
+
+        if (n == 0) {
+        y = 0;
+        for (int j = 0; j < quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows/4) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+ 
+    } else if (n == 1) {
+        y = rows/4;
+        for (int j = quarter; j < middle; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows/2) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+
+    } else if (n == 2) {
+        y = rows/2;
+        for (int j = middle; j < middle + quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 3)/4) y++;
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+    } else if (n == 3) {
+        y = (rows * 3) / 4;
+        for (int j = middle + quarter; j < (rows * cols); j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows-1) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+    }
+
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
+
+}
+
+double Gaussian_Blur::convolve_eighths_y(Image & img, float temp_temp[], Image &new_img, 
+                                         std::vector<float> distrib, float var, int n) {
+
+    double startTime = CycleTimer::currentSeconds();
+
+    if (var == 0) {
+        std::cout << "NOTE: Input variance = 0, no change to image";
+        std::cout << std::endl;
+        return 0.0;
+    }
+    else if (var >= MAX_VARIANCE) {
+        std::cout << "Desired variance too high! Max is " << MAX_VARIANCE;
+        std::cout << std::endl;
+        return 0.0;
+    }
+    int row, col, rows = img.rows, cols = img.cols;
+    float temp[rows * cols];  // result from vertical convolution
+    int K = distrib.size();
+    int mean_K = K / 2;
+
+
+    int middle = (rows * cols) / 2;
+    int quarter = (rows * cols) / 4;
+    int eighths = (rows * cols) / 8;
+
+    int x = 0, y = 0, y1, shift, new_val; 
+    float sum;
+
+    if (n == 0) {
+        y = 0;
+        for (int j = 0; j < eighths; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows/8)) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+        
+    } else if (n == 1) {
+        y = rows/8;
+        for (int j = eighths; j < quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows /4) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+
+    } else if (n == 2) {
+        y = rows / 4;
+        for (int j = quarter; j < quarter + eighths; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 3)/8) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+    } else if (n == 3) {
+        y = (rows * 3) / 8;
+        for (int j =  quarter + eighths; j < middle; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows/2) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+
+    } else if (n == 4) {
+        y = rows / 2;
+        for (int j = middle; j < middle + eighths; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 5)/8) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+        
+    } else if (n == 5) {
+        y = (rows * 5) / 8 ;
+        for (int j = middle + eighths; j < middle + quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 3)/4) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+
+    } else if (n == 6) {
+        y = (rows * 3) / 4;
+        for (int j = middle + quarter; j < middle + quarter + eighths; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 7)/8) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+    } else if (n == 7) {
+        y = (rows * 7) / 8;
+        for (int j = middle + quarter + eighths; j < (rows * cols); j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows-1) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                y1 = reflect(rows, y + shift);
+                sum += distrib[i] * (float)img.get(y1, x);
+            }
+            temp_temp[y*cols + x] = sum;
+        }
+
+    }    
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
+
+}
+
+
+
+double Gaussian_Blur::convolve_eighths_x(Image & img, float temp_temp[], Image &new_img, 
+                                         std::vector<float> distrib, float var, int n) {
+
+    double startTime = CycleTimer::currentSeconds();
+
+    if (var == 0) {
+        std::cout << "NOTE: Input variance = 0, no change to image";
+        std::cout << std::endl;
+        return 0.0;
+    }
+    else if (var >= MAX_VARIANCE) {
+        std::cout << "Desired variance too high! Max is " << MAX_VARIANCE;
+        std::cout << std::endl;
+        return 0.0;
+    }
+    int row, col, rows = img.rows, cols = img.cols;
+    float temp[rows * cols];  // result from vertical convolution
+    int K = distrib.size();
+    int mean_K = K / 2;
+
+
+    int middle = (rows * cols) / 2;
+    int quarter = (rows * cols) / 4;
+    int eighths = (rows * cols) / 8;
+
+    int x = 0, y = 0, x1, shift, new_val; 
+    float sum;
+
+        if (n == 0) {
+        y = 0;
+        for (int j = 0; j < quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows/4)) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+ 
+    } else if (n == 1) {
+        y = rows/8;
+        for (int j = quarter; j < middle; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows/2) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+
+    } else if (n == 2) {
+        y = rows/4;
+        for (int j = middle +1; j < middle + quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows *(3/4))) y++;
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+    } else if (n == 3) {
+        y = (rows * 3) / 8;
+        for (int j = middle + quarter; j < (rows * cols); j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows-1) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+    } else if (n == 4) {
+        y = rows / 2;
+        for (int j = middle; j < middle + eighths; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 5)/8) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+
+    } else if (n == 5) {
+        y = (rows * 5) / 8 ;
+        for (int j = middle + eighths; j < middle + quarter; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 3)/4) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+
+    } else if (n == 6) {
+        y = (rows * 3) / 4;
+        for (int j = middle + quarter; j < middle + quarter + eighths; j++) {
+            x = j % cols;
+            if (x == cols -1 && y != (rows * 7)/8) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+
+    } else if (n == 7) {
+        y = (rows * 7) / 8;
+        for (int j = middle + quarter + eighths; j < (rows * cols); j++) {
+            x = j % cols;
+            if (x == cols -1 && y != rows-1) y++;
+
+            sum = 0.0;
+            for(int i = 0; i < K; i++){
+                shift = i - mean_K;
+                x1 = reflect(cols, x + shift);
+                sum += distrib[i] * temp_temp[y*cols + x1];
+            }
+            new_val = (int)sum;
+            new_img.set(y, x, new_val);
+        }
+    }
+
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
+
+}

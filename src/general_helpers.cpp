@@ -1,4 +1,6 @@
 #include "general_helpers.h"
+#include "CycleTimer.h"
+
 
 int almost_equal(float v1, float v2, float abs_error) {
     return (v1 - v2) <= abs_error;
@@ -12,8 +14,19 @@ int reflect(int M, int x) {
     return x;
 }
 
-void shrink_half(Image & src, Image & dst) {
+double shrink_half(Image & src, Image & dst) {
     int total_val;
+    double startTime = CycleTimer::currentSeconds();
+
+    // int i, j;
+    // for (int k = 0; k < (src.rows-1) * (src.cols-1); k += 2) {
+    //     j = k % src.cols;
+    //     if (j == src.cols -2 && i != src.rows -2) i+= 2;
+
+    //     total_val = (src.get(i, j) + src.get(i+1, j) + 
+    //         src.get(i, j+1) + src.get(i+1, j+1));
+    //     dst.set(i/2, j/2, (int)((float)total_val / 4.0));
+    // }
     for (int i = 0; i < src.rows-1; i+=2) {
         for (int j = 0; j < src.cols-1; j+=2) {
             total_val = (src.get(i, j) + src.get(i+1, j) + 
@@ -21,9 +34,15 @@ void shrink_half(Image & src, Image & dst) {
             dst.set(i/2, j/2, (int)((float)total_val / 4.0));
         }
     }
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
-void shrink_quarter(Image & src, Image & dst) {
+double shrink_quarter(Image & src, Image & dst) {
+    double startTime = CycleTimer::currentSeconds();
+
     int total_val = 0;
     for (int i = 0; i < src.rows-3; i+=4) {
         for (int j = 0; j < src.cols-3; j+=4) {
@@ -36,9 +55,15 @@ void shrink_quarter(Image & src, Image & dst) {
             dst.set(i/4, j/4, (int)((float)total_val / 4.0));
         }
     }
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
-void shrink_eighth(Image & src, Image & dst) {
+double shrink_eighth(Image & src, Image & dst) {
+    double startTime = CycleTimer::currentSeconds();
+
     int total_val = 0;
     for (int i = 0; i < src.rows-7; i+=8) {
         for (int j = 0; j < src.cols-7; j+=8) {
@@ -51,6 +76,10 @@ void shrink_eighth(Image & src, Image & dst) {
             dst.set(i/8, j/8, (int)((float)total_val / 4.0));
         }
     }
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
 void print_usage() {

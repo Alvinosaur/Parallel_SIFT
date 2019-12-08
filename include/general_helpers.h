@@ -36,8 +36,8 @@ bool get_args(int argc, char** argv,
         std::string & img1_path, std::string & img2_path, float* variance, 
         bool* debug, int* view_index, float* gradient_threshold);
 
-void shrink_half(Image & src, Image & dst);
-void shrink_quarter(Image & src, Image & dst);
-void shrink_eighth(Image & src, Image & dst);
+double shrink_half(Image & src, Image & dst);
+double shrink_quarter(Image & src, Image & dst);
+double shrink_eighth(Image & src, Image & dst);
 
 #endif
