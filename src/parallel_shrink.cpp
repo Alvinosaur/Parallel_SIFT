@@ -65,18 +65,18 @@ int main(int argc, char* argv[]) {
     // Each task performs its own work in parallel and sends results
     // non-blocking and receives non-blocking
     shrink_mpi(src1, half_temp, half_assignments[rank], HALF);
-    send_shrink_to_others(half_temp, reqs, rank, half_assignments[rank], HALF, num_tasks);
-    receive_shrink_from_others(half_temp, reqs, half_assignments, rank, HALF);
+    send_to_others(half_temp, reqs, rank, half_assignments[rank], HALF, num_tasks);
+    receive_from_others(half_temp, reqs, half_assignments, rank, HALF);
 
     shrink_mpi(src1, quarter_temp, quarter_assignments[rank], QUARTER);
-    send_shrink_to_others(quarter_temp, reqs, rank, quarter_assignments[rank], QUARTER,
+    send_to_others(quarter_temp, reqs, rank, quarter_assignments[rank], QUARTER,
         num_tasks);
-    receive_shrink_from_others(quarter_temp, reqs, quarter_assignments, rank, QUARTER);
+    receive_from_others(quarter_temp, reqs, quarter_assignments, rank, QUARTER);
 
     shrink_mpi(src1, eighth_temp, eighth_assignments[rank], EIGHTH);
-    send_shrink_to_others(eighth_temp, reqs, rank, eighth_assignments[rank], EIGHTH,
+    send_to_others(eighth_temp, reqs, rank, eighth_assignments[rank], EIGHTH,
         num_tasks);
-    receive_shrink_from_others(eighth_temp, reqs, eighth_assignments, rank, EIGHTH);
+    receive_from_others(eighth_temp, reqs, eighth_assignments, rank, EIGHTH);
 
     printf("Thread %d finished shrink half\n", rank);
     for (int task = 0; task < num_tasks; task++) {

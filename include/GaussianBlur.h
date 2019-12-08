@@ -2,6 +2,7 @@
 #define _GBLUR_
 
 #include "Image.h"
+#include "general_helpers.h"
 #include <vector>
 #include <utility>
 
@@ -10,15 +11,25 @@
 // Figure out how to do horizontal and vertical gaussian blurs separately
 // 
 
+void allocate_conv_rows_mpi(int rows, int cols, int num_tasks,
+        std::vector<range> & row_assignments,
+        std::vector<range> & col_assignments,
+        std::vector<range> & row_pix_assignments,
+        std::vector<range> & col_pix_assignments);
+
 class Gaussian_Blur {
     std::vector<std::vector<int>> distribs;
     std::vector<std::vector<int>> variances;
-    int variance_to_depth(float var);
 public:
+    int variance_to_depth(float var);
     void generate_binomial_distrib(int n, std::vector<float> & new_distrib);
     int generate_kernel(std::vector<int> & kernel, float var);
-    void convolve_rows_mpi(Image & img, int* result, 
-        std::vector<float> & distrib);
+    void convolve(Image & img, Image & new_img, float var);
+    // NOTE: convolve_cols uses the result from convolve_rows
+    void convolve_rows_mpi(Image & img, int* row_conv, 
+        range col_range, std::vector<float> & distrib);
+    void convolve_cols_mpi(int* row_conv, int* col_conv, 
+        range row_range, std::vector<float> & distrib, int cols, int rows);
 };
 
 #endif

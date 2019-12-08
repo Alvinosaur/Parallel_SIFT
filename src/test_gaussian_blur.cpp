@@ -61,44 +61,58 @@ int main(int argc, char* argv[]) {
     MPI_Status stats[num_tasks * 2];
 
     // Each task allocates new work to be done
-    std::vector<range> row_assignments;
-    std::vector<range> col_assignments;
+    std::vector<range> row_assignments, row_pix_assignments;
+    std::vector<range> col_assignments, col_pix_assignments;
     allocate_conv_rows_mpi(src1.rows, src1.cols, num_tasks,
-        row_assignments, col_assignments);
+        row_assignments, col_assignments,
+        row_pix_assignments, col_pix_assignments);
 
     // Each task holds local array to hold results received from other tasks
     int conv_row_results[src1.rows * src1.cols];
     int conv_col_results[src1.rows * src1.cols];
-
+    
     // Each task performs its own work in parallel and sends results
     // non-blocking and receives non-blocking
-    shrink_mpi(src1, half_temp, half_assignments[rank], HALF);
-    send_to_others(half_temp, reqs, rank, half_assignments[rank], HALF, num_tasks);
-    receive_from_others(half_temp, reqs, half_assignments, rank, HALF);
+    std::vector<Image> conv_results;
+    for (int var_i = 0; var_i < standard_variances.size(); var_i++) {
 
-    shrink_mpi(src1, quarter_temp, quarter_assignments[rank], QUARTER);
-    send_to_others(quarter_temp, reqs, rank, quarter_assignments[rank], QUARTER,
-        num_tasks);
-    receive_from_others(quarter_temp, reqs, quarter_assignments, rank, QUARTER);
+        // Perform row-convolutions first, send results to other processes
+        gb.convolve_rows_mpi(src1, conv_row_results, 
+            col_assignments[rank], conv_distribs[var_i]);
+        send_to_others(conv_row_results, reqs, rank, col_pix_assignments[rank], 
+            var_i, num_tasks);
+        receive_from_others(conv_row_results, reqs, col_pix_assignments, 
+            rank, var_i);
 
-    shrink_mpi(src1, eighth_temp, eighth_assignments[rank], EIGHTH);
-    send_to_others(eighth_temp, reqs, rank, eighth_assignments[rank], EIGHTH,
-        num_tasks);
-    receive_from_others(eighth_temp, reqs, eighth_assignments, rank, EIGHTH);
+        // Barrier need to have received all row conv before starting col conv
+        for (int task = 0; task < num_tasks; task++) {
+            if (task == rank) continue;
+            MPI_Wait(&reqs[task], &stats[task]);
+        }
 
-    printf("Thread %d finished shrink half\n", rank);
-    for (int task = 0; task < num_tasks; task++) {
-        if (task == rank) continue;
-        MPI_Wait(&reqs[task],&stats[task]);
+        // Now perform column-convolutions using received row-convolutions
+        gb.convolve_cols_mpi(conv_row_results, conv_col_results, 
+            row_assignments[rank], conv_distribs[var_i], src1.cols, src1.rows);
+        send_to_others(conv_col_results, reqs, rank, row_pix_assignments[rank], 
+            var_i, num_tasks);
+        receive_from_others(conv_col_results, reqs, row_pix_assignments, rank, 
+            var_i);
+
+        // Barrier: must receive and store all data before reusing arrays
+        for (int task = 0; task < num_tasks; task++) {
+            if (task == rank) continue;
+            MPI_Wait(&reqs[task], &stats[task]);
+        }
+        printf("Thread %d finished convolution\n", rank);
+
+        // Store result in image before reusing temporary result arrays
+        Image new_conv(src1.rows, src1.cols, conv_col_results);
+        conv_results.push_back(new_conv);
     }
-
-    Image half(src1.rows/2, src1.cols/2, half_temp);
-    Image quarter(src1.rows/4, src1.cols/4, quarter_temp);
-    Image eighth(src1.rows/8, src1.cols/8, eighth_temp);
 
     if (rank == view_index) {
         if (debug) cout << "Storing result" << endl;
-        quarter.store_opencv(res_output);
+        conv_results[view_index].store_opencv(res_output);
         imwrite( "after_blur_result.jpg", res_output);
         imshow( "Blurred pikachu!", res_output );
         waitKey(0);

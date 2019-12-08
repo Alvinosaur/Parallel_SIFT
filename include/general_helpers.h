@@ -51,9 +51,9 @@ void allocate_shrink_work_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & quarter_assignments,
         std::vector<range> & eighth_assignments);
 
-void send_shrink_to_others(int* data, MPI_Request* reqs, int self_rank,
-        range self_range, int scale, int num_tasks);
-void receive_shrink_from_others(int* result, MPI_Request* reqs,
-    std::vector<range> & assignments, int self_rank, int scale);
+void send_to_others(int* data, MPI_Request* reqs, int self_rank,
+        range self_range, int id, int num_tasks);
+void receive_from_others(int* result, MPI_Request* reqs,
+    std::vector<range> & assignments, int self_rank, int id);
 
 #endif
