@@ -62,10 +62,8 @@ int main(int argc, char* argv[]) {
 
     // Each task allocates new work to be done
     std::vector<range> row_assignments, row_pix_assignments;
-    std::vector<range> col_assignments, col_pix_assignments;
     allocate_conv_rows_mpi(src1.rows, src1.cols, num_tasks,
-        row_assignments, col_assignments,
-        row_pix_assignments, col_pix_assignments);
+        row_assignments, row_pix_assignments);
 
     // Each task holds local array to hold results received from other tasks
     int conv_row_results[src1.rows * src1.cols];
@@ -78,10 +76,10 @@ int main(int argc, char* argv[]) {
 
         // Perform row-convolutions first, send results to other processes
         gb.convolve_rows_mpi(src1, conv_row_results, 
-            col_assignments[rank], conv_distribs[var_i]);
-        send_to_others(conv_row_results, reqs, rank, col_pix_assignments[rank], 
+            row_assignments[rank], conv_distribs[var_i]);
+        send_to_others(conv_row_results, reqs, rank, row_pix_assignments[rank], 
             var_i, num_tasks);
-        receive_from_others(conv_row_results, reqs, col_pix_assignments, 
+        receive_from_others(conv_row_results, reqs, row_pix_assignments, 
             rank, var_i);
 
         // Barrier need to have received all row conv before starting col conv
@@ -92,7 +90,7 @@ int main(int argc, char* argv[]) {
 
         // Now perform column-convolutions using received row-convolutions
         gb.convolve_cols_mpi(conv_row_results, conv_col_results, 
-            row_assignments[rank], conv_distribs[var_i], src1.cols, src1.rows);
+            row_assignments[rank], conv_distribs[var_i], src1.cols);
         send_to_others(conv_col_results, reqs, rank, row_pix_assignments[rank], 
             var_i, num_tasks);
         receive_from_others(conv_col_results, reqs, row_pix_assignments, rank, 

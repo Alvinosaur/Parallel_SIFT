@@ -12,40 +12,27 @@ const float MAX_ERROR = 1e-05;
 
 void allocate_conv_rows_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & row_assignments,
-        std::vector<range> & col_assignments,
-        std::vector<range> & row_pix_assignments,
-        std::vector<range> & col_pix_assignments) {
+        std::vector<range> & row_pix_assignments) {
     int rows_per_task = rows / num_tasks;
-    int cols_per_task = cols / num_tasks;
 
     for (int task = 0; task < num_tasks; task++) {
         // Work for rows
         range row_range, row_pix_range;
         row_range.first = rows_per_task * task;
         row_range.second = rows_per_task * (task + 1);
-        row_pix_range.first = row_range.first * cols;
-        row_pix_range.second = row_range.second * cols;
-
-        // Work for cols
-        range col_range, col_pix_range;
-        col_range.first = cols_per_task * task;
-        col_range.second = cols_per_task * (task + 1);
-        // do flipped row-major order
-        col_pix_range.first = col_range.first * rows;
-        col_pix_range.second = col_range.second * rows;
 
         // account for leftovers if uneven division of pixels btwn tasks
         // have last task take care of extra rows
         if (task == num_tasks-1) {
             row_range.second += rows % num_tasks;
-            col_range.second += cols % num_tasks;
         }
+
+        row_pix_range.first = row_range.first * cols;
+        row_pix_range.second = row_range.second * cols;
 
         // store assignments
         row_assignments.push_back(row_range);
-        col_assignments.push_back(col_range);
         row_pix_assignments.push_back(row_pix_range);
-        col_pix_assignments.push_back(col_pix_range);
     }
 }
 
@@ -78,31 +65,30 @@ void Gaussian_Blur::generate_binomial_distrib(int n,
 }
 
 void Gaussian_Blur::convolve_rows_mpi(Image & img, int* row_conv, 
-        range col_range, std::vector<float> & distrib) {
+        range row_range, std::vector<float> & distrib) {
     int row, col, rows = img.rows, cols = img.cols;
     int K = distrib.size();
     int mean_K = K / 2;
     float sum;
     int c, r, r1, i, shift;
-    int start = col_range.first, end = col_range.second;
+    int start = row_range.first, end = row_range.second;
 
     // might want to switch the order of the two loops so less branching
-    for(r = 0; r < rows; r++){
-        for(c = start; c < end; c++){
+    for(r = start; r < end; r++){
+        for(c = 0; c < cols; c++){
             sum = 0.0;
             for(i = 0; i < K; i++){
                 shift = i - mean_K;
                 r1 = reflect(rows, r + shift);
                 sum = sum + distrib[i] * (float)img.get(r1, c);
             }
-            // Must flip to store in row-major order so can be sent contiguously
-            row_conv[c*rows + cols] = sum;
+            row_conv[r*cols + c] = sum;
         }
     }
 }
 
 void Gaussian_Blur::convolve_cols_mpi(int* row_conv, int* col_conv, 
-        range row_range, std::vector<float> & distrib, int cols, int rows) {
+        range row_range, std::vector<float> & distrib, int cols) {
     int row, col;
     int K = distrib.size();
     int mean_K = K / 2;
@@ -117,8 +103,7 @@ void Gaussian_Blur::convolve_cols_mpi(int* row_conv, int* col_conv,
             for(i = 0; i < K; i++){
                 shift = i - mean_K;
                 c1 = reflect(cols, c + shift);
-                // flipped image version
-                sum = sum + distrib[i] * (float)row_conv[c1*rows + r];
+                sum = sum + distrib[i] * (float)row_conv[r*cols + c1];
             }
             col_conv[r*cols + c] = sum;
         }
