@@ -20,7 +20,7 @@ using namespace std;
 
 bool debug = false;
 int view_index = 0;
-float grad_threshold = 0;
+float grad_threshold = 0.0;
 float intensity_threshold = 1;
 
 double find_keypoint_features(Image & src, cv::Mat & result_features, 
@@ -52,43 +52,43 @@ int main(int argc, char* argv[]){
     cv::Mat res_output, features1, features2;
     std::vector<cv::KeyPoint> keypoints1, keypoints2;
     TIME += find_keypoint_features(src1, features1, keypoints1, 1);
-    // TIME += find_keypoint_features(src2, features2, keypoints2, 2);
+    TIME += find_keypoint_features(src2, features2, keypoints2, 2);
 
-    // // //-- Step 3: Matching descriptor vectors using FLANN matcher
-    // cv::FlannBasedMatcher matcher;
-    // std::vector< cv::DMatch > matches;
-    // matcher.match( features1, features2, matches );
+    // //-- Step 3: Matching descriptor vectors using FLANN matcher
+    cv::FlannBasedMatcher matcher;
+    std::vector< cv::DMatch > matches;
+    matcher.match( features1, features2, matches );
 
-    // double max_dist = 0; double min_dist = 100;
+    double max_dist = 0; double min_dist = 100;
 
-    // // //-- Quick calculation of max and min distances between keypoints
-    // for( int i = 0; i < features1.rows; i++ )
-    // { double dist = matches[i].distance;
-    //     if( dist < min_dist ) min_dist = dist;
-    //     if( dist > max_dist ) max_dist = dist;
-    // }
+    // //-- Quick calculation of max and min distances between keypoints
+    for( int i = 0; i < features1.rows; i++ )
+    { double dist = matches[i].distance;
+        if( dist < min_dist ) min_dist = dist;
+        if( dist > max_dist ) max_dist = dist;
+    }
 
-    // //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
-    // //-- or a small arbitary value ( 0.02 ) in the event that min_dist is very
-    // //-- small)
-    // //-- PS.- radiusMatch can also be used here.
-    // std::vector< cv::DMatch > good_matches;
+    //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
+    //-- or a small arbitary value ( 0.02 ) in the event that min_dist is very
+    //-- small)
+    //-- PS.- radiusMatch can also be used here.
+    std::vector< cv::DMatch > good_matches;
 
-    // for( int i = 0; i < features1.rows; i++ )
-    // { if( matches[i].distance <= max(2*min_dist, 0.02) )
-    //     { good_matches.push_back( matches[i]); }
-    // }
+    for( int i = 0; i < features1.rows; i++ )
+    { if( matches[i].distance <= max(2*min_dist, 0.02) )
+        { good_matches.push_back( matches[i]); }
+    }
 
-    // //-- Draw only "good" matches
-    // drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
-    //     good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
-    //     vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+    //-- Draw only "good" matches
+    drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
+        good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
+        vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
-    // printf("OVERALL TIME:                          %.3f ms\n", 1000.f * TIME);
+    printf("OVERALL TIME:                          %.3f ms\n", 1000.f * TIME);
 
-    // imwrite( "after_blur_result.jpg", res_output);
-    // imshow( "Blurred pikachu!", res_output );
-    // cv::waitKey(0);
+    imwrite( "after_blur_result.jpg", res_output);
+    imshow( "Blurred pikachu!", res_output );
+    cv::waitKey(0);
     return 0;
 }
 
@@ -160,11 +160,11 @@ double find_keypoint_features(Image & src, cv::Mat & result_features,
     printf("TOTAL_TIME:                            %.3f ms\n", 1000.f * TOTAL_TIME);
     printf("/////////////////////////////////////////////////////////////////////////////////\n");
 
-    cv::Mat res_output;
-    octave1_log[3].store_opencv(res_output);
-    imwrite( "after_blur_result.jpg", res_output);
-    imshow( "Blurred pikachu!", res_output );
-    cv::waitKey(0);
+    // cv::Mat res_output;
+    // octave1_log[3].store_opencv(res_output);
+    // imwrite( "after_blur_result.jpg", res_output);
+    // imshow( "Blurred pikachu!", res_output );
+    // cv::waitKey(0);
     
     return TOTAL_TIME;
 }

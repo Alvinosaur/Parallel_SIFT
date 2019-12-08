@@ -310,7 +310,8 @@ double Gaussian_Blur::convolve_half(Image & img, Image &new_img, float var, int 
 
 
 double Gaussian_Blur::convolve_quarters_y(Image & img, float temp_temp[], Image &new_img, 
-                                          std::vector<float> distrib, float var, int n) {
+                                         float var, int n) {
+                                          // std::vector<float> distrib, float var, int n) {
 
     double startTime = CycleTimer::currentSeconds();
 
@@ -325,7 +326,9 @@ double Gaussian_Blur::convolve_quarters_y(Image & img, float temp_temp[], Image 
         return 0.0;
     }
     int rows = img.rows, cols = img.cols;
-
+    std::vector<float> distrib;  // one-dimensional binomial distribution
+    generate_binomial_distrib(variance_to_depth(var), distrib);
+    
     int K = distrib.size();
     int mean_K = K / 2;
 
@@ -405,7 +408,8 @@ double Gaussian_Blur::convolve_quarters_y(Image & img, float temp_temp[], Image 
 
 
 double Gaussian_Blur::convolve_quarters_x(Image & img, float temp_temp[], Image &new_img, 
-                                          std::vector<float> distrib, float var, int n) {
+                                         float var, int n) {
+                                          // std::vector<float> distrib, float var, int n) {
 
     double startTime = CycleTimer::currentSeconds();
 
@@ -419,7 +423,9 @@ double Gaussian_Blur::convolve_quarters_x(Image & img, float temp_temp[], Image 
         std::cout << std::endl;
         return 0.0;
     }
-    int row, col, rows = img.rows, cols = img.cols;
+    int rows = img.rows, cols = img.cols;
+    std::vector<float> distrib;  // one-dimensional binomial distribution
+    generate_binomial_distrib(variance_to_depth(var), distrib);
     int K = distrib.size();
     int mean_K = K / 2;
 
@@ -430,7 +436,7 @@ double Gaussian_Blur::convolve_quarters_x(Image & img, float temp_temp[], Image 
     int x = 0, y = 0, x1,  shift, new_val; 
     int sum;
 
-        if (n == 0) {
+    if (n == 0) {
         y = 0;
         for (int j = 0; j < quarter; j++) {
             x = j % cols;
@@ -501,7 +507,8 @@ double Gaussian_Blur::convolve_quarters_x(Image & img, float temp_temp[], Image 
 }
 
 double Gaussian_Blur::convolve_eighths_y(Image & img, float temp_temp[], Image &new_img, 
-                                         std::vector<float> distrib, float var, int n) {
+                                         float var, int n) {
+                                         // std::vector<float> distrib, float var, int n) {
 
     double startTime = CycleTimer::currentSeconds();
 
@@ -515,8 +522,9 @@ double Gaussian_Blur::convolve_eighths_y(Image & img, float temp_temp[], Image &
         std::cout << std::endl;
         return 0.0;
     }
-    int row, col, rows = img.rows, cols = img.cols;
-    float temp[rows * cols];  // result from vertical convolution
+    int rows = img.rows, cols = img.cols;
+    std::vector<float> distrib;  // one-dimensional binomial distribution
+    generate_binomial_distrib(variance_to_depth(var), distrib);
     int K = distrib.size();
     int mean_K = K / 2;
 
@@ -657,7 +665,8 @@ double Gaussian_Blur::convolve_eighths_y(Image & img, float temp_temp[], Image &
 
 
 double Gaussian_Blur::convolve_eighths_x(Image & img, float temp_temp[], Image &new_img, 
-                                         std::vector<float> distrib, float var, int n) {
+                                         float var, int n) {
+                                         // std::vector<float> distrib, float var, int n) {
 
     double startTime = CycleTimer::currentSeconds();
 
@@ -671,8 +680,9 @@ double Gaussian_Blur::convolve_eighths_x(Image & img, float temp_temp[], Image &
         std::cout << std::endl;
         return 0.0;
     }
-    int row, col, rows = img.rows, cols = img.cols;
-    float temp[rows * cols];  // result from vertical convolution
+    int rows = img.rows, cols = img.cols;
+    std::vector<float> distrib;  // one-dimensional binomial distribution
+    generate_binomial_distrib(variance_to_depth(var), distrib);
     int K = distrib.size();
     int mean_K = K / 2;
 
@@ -684,7 +694,7 @@ double Gaussian_Blur::convolve_eighths_x(Image & img, float temp_temp[], Image &
     int x = 0, y = 0, x1, shift, new_val; 
     float sum;
 
-        if (n == 0) {
+    if (n == 0) {
         y = 0;
         for (int j = 0; j < quarter; j++) {
             x = j % cols;

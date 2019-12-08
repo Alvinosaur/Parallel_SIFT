@@ -196,6 +196,7 @@ double Keypoint::mark_keypoints(Image & src, std::vector<coord> & keypoints) {
     return overallTime;
 }
 
+
 int rad_to_deg(float ang_rad) {
 	int ang_deg = (int)(ang_rad * RAD_TO_DEG);
 	// can't use modulo operator here since isn't python and won't
@@ -241,7 +242,8 @@ double Keypoint::find_corners_gradients(
 		if (is_corner(abs(grad_x), abs(grad_y))) {
 			coord new_kp(r, c);
 			keypoints.push_back(new_kp);
-		}
+		} 
+
 	}
 
 

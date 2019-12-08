@@ -157,67 +157,33 @@ double LoG::create_blurs(std::vector<Image> & result, Image & src) {
     Image temp(src.rows, src.cols);
     float temp_temp[src.rows * src.cols]; 
     Image prev_scale = src;
-    std::vector<float> distrib;  // one-dimensional binomial distribution
     double SIFT_TIME = 50000.;
 
     // printf("%d\n", standard_variances.size());
     for (int i = 0; i < standard_variances.size(); i++) {
 
         float var = standard_variances[i];
-        generate_binomial_distrib(variance_to_depth(var), distrib);
+        // std::vector<float> distrib;  // one-dimensional binomial distribution
+        // generate_binomial_distrib(variance_to_depth(var), distrib);
 
-        std::cout << "Distrib for "  << var << std::endl;
-        print_arr<float>(distrib);
-        std::cout << std::endl;
+        // std::cout << "Distrib for "  << var << std::endl;
+        // print_arr<float>(distrib);
+        // std::cout << std::endl;
 
         // convolve source image with some variance
-        // #pragma omp parallel sections shared(src, temp)
-        // {
-        
-        //     #pragma omp section
-        //     {
-        //         SIFT_TIME = gb.convolve_quarters(src, temp, var, 0);
-        //         printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
-        //     }
-        //     #pragma omp section
-        //     {
-        //         SIFT_TIME = gb.convolve_quarters(src, temp, var, 1);
-        //         printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
-        //     }
-        //     #pragma omp section
-        //     {
-        //         SIFT_TIME = gb.convolve_quarters(src, temp, var, 2);
-        //         printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
-        //     }
-        //     #pragma omp section
-        //     {
-        //         SIFT_TIME = gb.convolve_quarters(src, temp, var, 3);
-        //         printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
-        //     }
-            
-        // }
-
 
         // #pragma omp parallel shared(src, temp, temp_temp) 
         // {
         //     #pragma omp single
         //     {
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 0);
+        //         SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 0);
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 1);
+        //         SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 1);
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 2);
+        //         SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 2);
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 3);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 4);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 5);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 6);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 7);
+        //         SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 3);
 
         //     }
         // }
@@ -227,21 +193,13 @@ double LoG::create_blurs(std::vector<Image> & result, Image & src) {
         //     #pragma omp single
         //     {
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 0);
+        //         SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 0);
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 1);
+        //         SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 1);
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 2);
+        //         SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 2);
         //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 3);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 4);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 5);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 6);
-        //         #pragma omp task
-        //         SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 7);
+        //         SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 3);
 
         //     }
         // }
@@ -267,15 +225,27 @@ double LoG::create_blurs(std::vector<Image> & result, Image & src) {
 
 
 
-        SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 0);
-        SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 1);
-        SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 2);
-        SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 3);
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 0);
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 1);
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 2);
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 3);
 
-        SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 0);
-        SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 1);
-        SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 2);
-        SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 3);
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 0);
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 1);
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 2);
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 3);
+
+
+
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 0);
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 1);
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 2);
+        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 3);
+
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 0);
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 1);
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 2);
+        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 3);
 
 
         // SIFT_TIME = gb.convolve_half(src, temp, var, 0);
@@ -284,13 +254,13 @@ double LoG::create_blurs(std::vector<Image> & result, Image & src) {
         // printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
 
 
-        // SIFT_TIME = gb.convolve(src, temp, var);
-        // printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
+        SIFT_TIME = gb.convolve(src, temp, var);
+        printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
 
 
         // subtract from previous scale to obtain gaussian difference
-        // result.push_back(prev_scale - temp);
-        result.push_back(temp);
+        result.push_back(prev_scale - temp);
+        // result.push_back(temp);
         prev_scale = temp;
     }
 
