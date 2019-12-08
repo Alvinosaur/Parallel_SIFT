@@ -40,11 +40,17 @@ int reflect(int M, int x);
 void print_usage();
 bool get_args(int argc, char** argv,
         std::string & img1_path, std::string & img2_path, float* variance,
-        bool* debug, int* view_index, float* gradient_threshold);
+        bool* debug, int* view_index, float* gradient_threshold,
+        float* intensity_threshold);
 
 void shrink(Image & src, Image & dst, int scale);
 void shrink_mpi(const Image & src, int* result, const range & start_end,
     int scale);
+
+void mpi_barrier(int rank, int num_tasks, MPI_Request* reqs, MPI_Status* stats);
+
+void allocate_work_pix_mpi(int rows, int cols, int num_tasks,
+    std::vector<range> & assignments);
 
 void allocate_shrink_work_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & half_assignments,

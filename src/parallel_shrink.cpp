@@ -16,6 +16,7 @@ using namespace cv;
 bool debug = false;
 int view_index = 0;
 float grad_threshold = 0;
+float intensity_threshold = 0;
 
 #define MAX_THREADS 8  // for ghc machines
 
@@ -27,7 +28,7 @@ int main(int argc, char* argv[]) {
     }
     std::string img1_path, img2_path;
     if (!get_args(argc, argv, img1_path, img2_path, &variance, &debug,
-        &view_index, &grad_threshold)) {
+        &view_index, &grad_threshold, &intensity_threshold)) {
         std::cout << "Failed to pass in valid image path with -p1 and -p2";
         std::cout << std::endl;
         exit(-1);

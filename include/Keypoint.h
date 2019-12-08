@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <utility>
+#include "mpi.h"
 
 #define FEATURE_VEC_SIZE 128
 
@@ -37,10 +38,15 @@ class Keypoint {
     Image src;
 	float grad_thresh;
 	float intensity_thresh;
+	int rank, num_tasks;
+    MPI_Request* reqs;
+    MPI_Status* stats;
+
 public:
-    Keypoint(Image & src, float grad_thresh_x, float intensity_thresh);
-	void getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
-	Image & res);
+    Keypoint(Image & src_x, float grad_thresh_x, float intensity_thresh_x,
+		int rank_x, int num_tasks_x, MPI_Request* reqs_x, MPI_Status* stats_x);
+	void getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
+		int* result, const range & start_end);
 
 	double find_keypoints(std::vector<Image> & differences, 
 		std::vector<Image> & keypoint_results);

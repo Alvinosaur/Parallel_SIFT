@@ -16,6 +16,32 @@ int reflect(int M, int x) {
     return x;
 }
 
+void mpi_barrier(int rank, int num_tasks, 
+        MPI_Request* reqs, MPI_Status* stats) {
+    for (int task = 0; task < num_tasks; task++) {
+        if (task == rank) continue;
+        MPI_Wait(&reqs[task],&stats[task]);
+    }
+}
+
+void allocate_work_pix_mpi(int rows, int cols, int num_tasks,
+        std::vector<range> & assignments) {
+    int total_pix = rows * cols;
+    int pix_per_task = total_pix / num_tasks;
+
+    for (int task = 0; task < num_tasks; task++) {
+        range new_range;
+        new_range.first = pix_per_task * task;
+        new_range.second = pix_per_task * (task + 1);
+
+        // account for leftovers if uneven division of pixels btwn tasks
+        if (task == num_tasks-1) {
+            new_range.second += total_pix % num_tasks;
+        }
+        assignments.push_back(new_range);
+    }
+}
+
 void allocate_shrink_work_mpi(int rows, int cols, int num_tasks,
         std::vector<range> & half_assignments,
         std::vector<range> & quarter_assignments,
@@ -139,19 +165,21 @@ void print_usage() {
     printf("   -i   view_index for which gaussian difference to view\n");
     printf("   -v   desired variance level\n");
     printf("   -g   gradient threshold for keypoint filtering\n");
+    printf("   -f   intensity threshold for keypoint filtering\n");
 }
 
 
 bool get_args(int argc, char** argv,
         std::string & img1_path, std::string & img2_path, float* variance,
-        bool* debug, int* view_index, float* gradient_threshold) {
+        bool* debug, int* view_index, float* gradient_threshold,
+        float* intensity_threshold) {
     /*
      * Reads in input args from commandline.
      */
     extern char* optarg;
     int option;
     bool set_img1_path = false, set_img2_path = false;
-    while ((option = getopt(argc, argv, "hda:b:i:v:g:")) != EOF) {
+    while ((option = getopt(argc, argv, "hda:b:i:v:g:f:")) != EOF) {
         switch (option) {
             case 'h':  // help
                 print_usage();
@@ -181,6 +209,11 @@ bool get_args(int argc, char** argv,
                 *gradient_threshold = atof(optarg);
                 if (*gradient_threshold) printf(
                     "Gradient Threshold: %f\n", *gradient_threshold);
+                break;
+            case 'f':
+                *intensity_threshold = atof(optarg);
+                if (*intensity_threshold) printf(
+                    "Intensity Threshold: %f\n", *intensity_threshold);
                 break;
             default:
                 print_usage();

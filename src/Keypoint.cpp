@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <cmath>
 #include "CycleTimer.h"
+#include "mpi.h"
 
 
 #define NUM_REGIONS 16
@@ -14,62 +15,61 @@
 
 const int MAX_VAL = 255;
 
-Keypoint::Keypoint(Image & src_x, float grad_thresh_x, float intensity_thresh_x)
+Keypoint::Keypoint(Image & src_x, float grad_thresh_x, float intensity_thresh_x,
+	int rank_x, int num_tasks_x, MPI_Request* reqs_x, MPI_Status* stats_x)
 	: src(src_x), grad_thresh(grad_thresh_x), 
-	intensity_thresh(intensity_thresh_x) {}
+	intensity_thresh(intensity_thresh_x),
+	rank(rank_x), num_tasks(num_tasks_x), reqs(reqs_x), stats(stats_x){}
 
-void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img, 
-		Image & res) {
-	int r, c, r_offset, c_offset, new_r, new_c, cur_val;
+
+void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
+		int* result, const range & start_end) {
+	int k, r, c, r_offset, c_offset, new_r, new_c, cur_val;
+	int start = start_end.first, end = start_end.second;
 	int is_max, is_min, is_intense;
 	int rows = cur_img.rows, cols = cur_img.cols;
 	float avg_val = 0;
 
-	// TODO: Possibly try to check if adjacent pixels are edge, if so mark cur 
-	// as edge and don't include this as keypoint
-	// int extrema[rows * cols];
-	// memset(extrema, 0, rows * cols);
+	for (k = start; k < end; k++) {
+		r = k / cols;
+		c = k % cols;
+		cur_val = cur_img.get(r, c);
+		is_max = 1;
+		is_min = 1;
+		// avg_val += abs(cur_val);
+		is_intense = (abs(cur_val) > intensity_thresh);
 
-	for (r = 0; r < rows; r++) {
-		for (c = 0; c < cols; c++) {
-			cur_val = cur_img.get(r, c);
-			is_max = 1;
-			is_min = 1;
-			// avg_val += abs(cur_val);
-			is_intense = (abs(cur_val) > intensity_thresh);
+		if (!is_intense) {
+			// assumes result array already memset to 0's, so just continue
+			continue;
+		}
 
-			if (!is_intense) {
-				res.data.push_back(0);
-				continue;
-			}
+		// Iterate through a 3x3 window of neighboring pixels
+		for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
+			new_r = reflect(rows, r + r_offset);
+			for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
+				new_c = reflect(cols, c + c_offset);
 
-			// Iterate through a 3x3 window of neighboring pixels
-			for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
-				new_r = reflect(rows, r + r_offset);
-				for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
-					new_c = reflect(cols, c + c_offset);
+				// don't compare pixel to itself
 
-					// don't compare pixel to itself
+				assert(0 <= new_r < rows);
+				assert(0 <= new_c < cols);
+				// compare neighbors of prev, cur, and next scales
+				is_max &= (cur_val > prev_img.get(new_r, new_c));
+				is_max &= (cur_val > next_img.get(new_r, new_c));
 
-					assert(0 <= new_r < rows);
-					assert(0 <= new_c < cols);
-					// compare neighbors of prev, cur, and next scales
-					is_max &= (cur_val > prev_img.get(new_r, new_c));
-					is_max &= (cur_val > next_img.get(new_r, new_c));
+				is_min &= (cur_val < prev_img.get(new_r, new_c));
+				is_min &= (cur_val < next_img.get(new_r, new_c));
 
-					is_min &= (cur_val < prev_img.get(new_r, new_c));
-					is_min &= (cur_val < next_img.get(new_r, new_c));
-
-					if (new_r != r && new_c != c) {
-						is_max &= (cur_val > cur_img.get(new_r, new_c));
-						is_min &= (cur_val < cur_img.get(new_r, new_c));
-					}
+				if (new_r != r && new_c != c) {
+					is_max &= (cur_val > cur_img.get(new_r, new_c));
+					is_min &= (cur_val < cur_img.get(new_r, new_c));
 				}
 			}
-			// set as max value if max, else set 0
-			// if (is_max) printf("Found max: %d\n", cur_val);
-			res.data.push_back(cur_val * (is_max || is_min));
 		}
+		// set as max value if max, else set 0
+		// if (is_max) printf("Found max: %d\n", cur_val);
+		result[r*cols + c] = cur_val * (is_max || is_min);
 	}
 	// printf("Average intensity: %f\n", avg_val / (float)cur_img.data.size());
 }
@@ -81,18 +81,43 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 	double startTime = CycleTimer::currentSeconds();
 
 	// two keypoint images
-	Image kp1(differences[0].rows, differences[0].cols);
-	Image kp2(differences[0].rows, differences[0].cols);
-	getMaxes(differences[0], differences[1], differences[2], kp1);
-	getMaxes(differences[1], differences[2], differences[3], kp2);
+	int rows = differences[0].rows, cols = differences[0].cols;
+	int* kp1 = (int*)calloc(rows*cols, sizeof(int));
+	int* kp2 = (int*)calloc(rows*cols, sizeof(int));
 
-	keypoint_results.push_back(kp1);
-	keypoint_results.push_back(kp2);
+	const int kp1_id = 1;
+	const int kp2_id = 2;
+
+	std::vector<range> assignments;
+	allocate_work_pix_mpi(rows, cols, num_tasks, assignments);
+
+	getMaxes(differences[0], differences[1], differences[2], 
+		kp1, assignments[rank]);
+	send_to_others(kp1, reqs, rank, assignments[rank], kp1_id, num_tasks);
+    receive_from_others(kp1, reqs, assignments, rank, kp1_id);
+	getMaxes(differences[1], differences[2], differences[3], 
+		kp2, assignments[rank]);
+	send_to_others(kp2, reqs, rank, assignments[rank], kp2_id, num_tasks);
+    receive_from_others(kp2, reqs, assignments, rank, kp2_id);
+
+    for (int task = 0; task < num_tasks; task++) {
+        if (task == rank) continue;
+        MPI_Wait(&reqs[task], &stats[task]);
+    }
+	printf("Thread %d finished finding keypoints\n", rank);
+
+	Image kp1_img(rows, cols, kp1);
+	Image kp2_img(rows, cols, kp2);
+	free(kp1);
+	free(kp2);
+	keypoint_results.push_back(kp1_img);
+	keypoint_results.push_back(kp2_img);
 
 	double endTime = CycleTimer::currentSeconds();
     double overallTime = endTime - startTime;
     return overallTime;
 }
+
 
 // void Keypoint::filter_keypoints(std::)
 

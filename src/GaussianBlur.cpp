@@ -36,6 +36,16 @@ void allocate_conv_rows_mpi(int rows, int cols, int num_tasks,
     }
 }
 
+void Gaussian_Blur::precompute_distributions(
+        std::vector<std::vector<float>> & conv_distribs) {
+    for (float var : standard_variances) {
+        std::vector<float> new_distrib;
+        int depth = variance_to_depth(var);
+        generate_binomial_distrib(depth, new_distrib);
+        conv_distribs.push_back(new_distrib);
+    }
+}
+
 // sigma^2 = np(1-p) = n/4 [p = 1/2 binomial distrib]
 int Gaussian_Blur::variance_to_depth(float var) {
     return (int)ceilf(var * var * 4.0);

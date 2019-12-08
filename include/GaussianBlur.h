@@ -22,6 +22,8 @@ public:
     int variance_to_depth(float var);
     void generate_binomial_distrib(int n, std::vector<float> & new_distrib);
     int generate_kernel(std::vector<int> & kernel, float var);
+    void precompute_distributions(
+        std::vector<std::vector<float>> & conv_distribs);
     void convolve(Image & img, Image & new_img, float var);
     // NOTE: convolve_cols uses the result from convolve_rows
     void convolve_rows_mpi(Image & img, int* row_conv, 
