@@ -30,104 +30,104 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 	// int extrema[rows * cols];
 	// memset(extrema, 0, rows * cols);
 
-	for (int i = 0; i < rows * cols; i++) {
+	// for (int i = 0; i < rows * cols; i++) {
 
-		c = i % cols;
-		if (c == cols -1 && r != rows -1) r++;
+	// 	c = i % cols;
+	// 	if (c == cols -1 && r != rows -1) r++;
 
-		cur_val = cur_img.get(r, c);
-		is_max = 1;
-		is_min = 1;
-		// avg_val += abs(cur_val);
-		is_intense = (abs(cur_val) > intensity_thresh);
+	// 	cur_val = cur_img.get(r, c);
+	// 	is_max = 1;
+	// 	is_min = 1;
+	// 	// avg_val += abs(cur_val);
+	// 	is_intense = (abs(cur_val) > intensity_thresh);
 
-		// printf("%d \n", is_intense);
-		if (!is_intense) {
-			res.data.push_back(0);
-			continue;
-		}
+	// 	// printf("%d \n", is_intense);
+	// 	if (!is_intense) {
+	// 		res.data.push_back(0);
+	// 		continue;
+	// 	}
 
-		// Iterate through a 3x3 window of neighboring pixels
-		for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
-			new_r = reflect(rows, r + r_offset);
-			for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
-				new_c = reflect(cols, c + c_offset);
+	// 	// Iterate through a 3x3 window of neighboring pixels
+	// 	for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
+	// 		new_r = reflect(rows, r + r_offset);
+	// 		for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
+	// 			new_c = reflect(cols, c + c_offset);
 
-				// don't compare pixel to itself
+	// 			// don't compare pixel to itself
 
-				assert(0 <= new_r < rows);
-				assert(0 <= new_c < cols);
-				// compare neighbors of prev, cur, and next scales
-				is_max &= (cur_val > prev_img.get(new_r, new_c));
-				is_max &= (cur_val > next_img.get(new_r, new_c));
+	// 			assert(0 <= new_r < rows);
+	// 			assert(0 <= new_c < cols);
+	// 			// compare neighbors of prev, cur, and next scales
+	// 			is_max &= (cur_val > prev_img.get(new_r, new_c));
+	// 			is_max &= (cur_val > next_img.get(new_r, new_c));
 
-				is_min &= (cur_val < prev_img.get(new_r, new_c));
-				is_min &= (cur_val < next_img.get(new_r, new_c));
+	// 			is_min &= (cur_val < prev_img.get(new_r, new_c));
+	// 			is_min &= (cur_val < next_img.get(new_r, new_c));
 
-				if (new_r != r && new_c != c) {
-					is_max &= (cur_val > cur_img.get(new_r, new_c));
-					is_min &= (cur_val < cur_img.get(new_r, new_c));
+	// 			if (new_r != r && new_c != c) {
+	// 				is_max &= (cur_val > cur_img.get(new_r, new_c));
+	// 				is_min &= (cur_val < cur_img.get(new_r, new_c));
+	// 			}
+	// 		}
+	// 	}
+
+	// 	res.data.push_back(cur_val * (is_max || is_min));	
+		
+	// }
+
+    #pragma omp parallel
+    {
+    	std::vector<int> private_data;
+    	#pragma omp for schedule(dynamic) nowait
+    	for (int i = 0; i < rows * cols; i++) {
+
+			c = i % cols;
+			if (c == cols -1 && r != rows -1) r++;
+
+			cur_val = cur_img.get(r, c);
+			is_max = 1;
+			is_min = 1;
+			// avg_val += abs(cur_val);
+			is_intense = (abs(cur_val) > intensity_thresh);
+
+			// printf("%d \n", is_intense);
+			if (!is_intense) {
+				// res.data.push_back(0);
+				private_data.push_back(0);
+				continue;
+			}
+
+			// Iterate through a 3x3 window of neighboring pixels
+			for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
+				new_r = reflect(rows, r + r_offset);
+				for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
+					new_c = reflect(cols, c + c_offset);
+
+					// don't compare pixel to itself
+
+					assert(0 <= new_r < rows);
+					assert(0 <= new_c < cols);
+					// compare neighbors of prev, cur, and next scales
+					is_max &= (cur_val > prev_img.get(new_r, new_c));
+					is_max &= (cur_val > next_img.get(new_r, new_c));
+
+					is_min &= (cur_val < prev_img.get(new_r, new_c));
+					is_min &= (cur_val < next_img.get(new_r, new_c));
+
+					if (new_r != r && new_c != c) {
+						is_max &= (cur_val > cur_img.get(new_r, new_c));
+						is_min &= (cur_val < cur_img.get(new_r, new_c));
+					}
 				}
 			}
-		}
 
-		res.data.push_back(cur_val * (is_max || is_min));	
-		
-	}
-
-  //   #pragma omp parallel
-  //   {
-  //   	std::vector<int> private_data;
-  //   	#pragma omp for schedule(static) nowait
-  //   	for (int i = 0; i < rows * cols; i++) {
-
-		// 	c = i % cols;
-		// 	if (c == cols -1 && r != rows -1) r++;
-
-		// 	cur_val = cur_img.get(r, c);
-		// 	is_max = 1;
-		// 	is_min = 1;
-		// 	// avg_val += abs(cur_val);
-		// 	is_intense = (abs(cur_val) > intensity_thresh);
-
-		// 	// printf("%d \n", is_intense);
-		// 	if (!is_intense) {
-		// 		// res.data.push_back(0);
-		// 		private_data.push_back(0);
-		// 		continue;
-		// 	}
-
-		// 	// Iterate through a 3x3 window of neighboring pixels
-		// 	for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
-		// 		new_r = reflect(rows, r + r_offset);
-		// 		for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
-		// 			new_c = reflect(cols, c + c_offset);
-
-		// 			// don't compare pixel to itself
-
-		// 			assert(0 <= new_r < rows);
-		// 			assert(0 <= new_c < cols);
-		// 			// compare neighbors of prev, cur, and next scales
-		// 			is_max &= (cur_val > prev_img.get(new_r, new_c));
-		// 			is_max &= (cur_val > next_img.get(new_r, new_c));
-
-		// 			is_min &= (cur_val < prev_img.get(new_r, new_c));
-		// 			is_min &= (cur_val < next_img.get(new_r, new_c));
-
-		// 			if (new_r != r && new_c != c) {
-		// 				is_max &= (cur_val > cur_img.get(new_r, new_c));
-		// 				is_min &= (cur_val < cur_img.get(new_r, new_c));
-		// 			}
-		// 		}
-		// 	}
-
-		// 	// res.data.push_back(cur_val * (is_max || is_min));	
-		// 	private_data.push_back(cur_val * (is_max || is_min));
+			// res.data.push_back(cur_val * (is_max || is_min));	
+			private_data.push_back(cur_val * (is_max || is_min));
 			
-		// }
-
-		// res.data.insert(res.data.end(), private_data.begin(), private_data.end());
-  //   }
+		}
+		#pragma omp critical
+		res.data.insert(res.data.end(), private_data.begin(), private_data.end());
+    }
 	
 
 	printf("Average intensity: %f\n", avg_val / (float)cur_img.data.size());
@@ -143,22 +143,22 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 	Image kp1(differences[0].rows, differences[0].cols);
 	Image kp2(differences[0].rows, differences[0].cols);
 
-	// #pragma omp parallel 
- //    {
- //        #pragma omp single
- //        {
- //            #pragma omp task
- //            {
- //            	getMaxes(differences[0], differences[1], differences[2], kp1);
+	#pragma omp parallel 
+    {
+        #pragma omp single
+        {
+            #pragma omp task
+            {
+            	getMaxes(differences[0], differences[1], differences[2], kp1);
 
- //            }
-	// 		#pragma omp task
-	// 		{
-	// 			getMaxes(differences[1], differences[2], differences[3], kp2);
+            }
+			#pragma omp task
+			{
+				getMaxes(differences[1], differences[2], differences[3], kp2);
 
-	// 		}
-	// 	}
-	// }
+			}
+		}
+	}
 
 	getMaxes(differences[0], differences[1], differences[2], kp1);
 	getMaxes(differences[1], differences[2], differences[3], kp2);
