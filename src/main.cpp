@@ -65,8 +65,8 @@ int main(int argc, char* argv[]){
 
     find_keypoint_features(src1, features1, keypoints1, num_tasks, rank,
         reqs, stats);
-    find_keypoint_features(src2, features2, keypoints2, num_tasks, rank,
-        reqs, stats);
+    // find_keypoint_features(src2, features2, keypoints2, num_tasks, rank,
+    //     reqs, stats);
 
     MPI_Finalize();
 
@@ -110,40 +110,41 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
         std::vector<cv::KeyPoint> & cv_keypoints, int num_tasks, int rank, 
         MPI_Request* reqs, MPI_Status* stats) {
     ///////////////////////////////////// Algorithm BEGIN /////////////////////////////////////
-    double SIFT_TIME;
+    double SIFT_TIME = 0;
 
     ///////////////////////////////////// LoG BEGIN /////////////////////////////////////
     // Find Difference of Gaussian Images using LoG
     LoG LoG_processor(src, num_tasks, rank, reqs, stats);
     std::vector<Image> octave1_log, octave2_log, octave3_log, octave4_log;
 
-    SIFT_TIME = LoG_processor.find_LoG_images(
+    double log_time = 0;
+    log_time = LoG_processor.find_LoG_images(
         octave1_log, octave2_log, octave3_log, octave4_log);
+    printf("LoG process time: %.3f s\n", log_time);
+    
+    ///////////////////////////////////// LoG END /////////////////////////////////////
+
+
+    ///////////////////////////////////// Keypoint begin /////////////////////////////////////
+    // Find keypoint image-pairs between the DoG images
+    Keypoint kp_finder(src, grad_threshold, intensity_threshold,
+        rank, num_tasks, reqs, stats);
+    std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
+
+    double find_kp_time = 0;
+    find_kp_time += kp_finder.find_keypoints(octave1_log, octave1_kp);
+    find_kp_time += kp_finder.find_keypoints(octave1_log, octave1_kp);
+    find_kp_time += kp_finder.find_keypoints(octave2_log, octave2_kp);
+    find_kp_time += kp_finder.find_keypoints(octave3_log, octave3_kp);
+    find_kp_time += kp_finder.find_keypoints(octave4_log, octave4_kp);
+    printf("keypoint_find for ALL octaves time: %.3f s\n", find_kp_time);
 
     if (rank == 0) {
         cv::Mat res_output;
-        octave1_log[0].store_opencv(res_output);
+        octave1_kp[0].store_opencv(res_output);
         imshow( "Blurred pikachu!", res_output );
         cv::waitKey(0);
     }
-    // printf("LoG process time: %.3f s\n", SIFT_TIME);
-    // ///////////////////////////////////// LoG END /////////////////////////////////////
-
-
-    // ///////////////////////////////////// Keypoint begin /////////////////////////////////////
-    // // Find keypoint image-pairs between the DoG images
-    // Keypoint kp_finder(src, grad_threshold, intensity_threshold);
-    // std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
-
-    // SIFT_TIME = kp_finder.find_keypoints(octave1_log, octave1_kp);
-    // printf("keypoint_find for octave1 time: %.3f s\n", SIFT_TIME);
-    // // kp_finder.find_keypoints(octave1_log, octave1_kp);
-    // // kp_finder.find_keypoints(octave2_log, octave2_kp);
-    // // kp_finder.find_keypoints(octave3_log, octave3_kp);
-    // // kp_finder.find_keypoints(octave4_log, octave4_kp);
-
-    // if (debug) cout << "Storing result" << endl;
-    // printf("%lu, %d\n", octave1_kp.size(), view_index);
 
     // Image gradx(src.rows, src.cols), grady(src.rows, src.cols);
     // std::vector<coord> keypoints;
@@ -162,4 +163,6 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     // kp_finder.store_keypoints(keypoint_features, cv_keypoints, 1, src.cols);
     
     // kp_finder.store_features(keypoint_features, result_features);
+
+
 }

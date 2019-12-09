@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
         conv_results.push_back(new_conv);
     }
 
-    double endTime = CycleTimer::currentSeconds();
+    double endTime = CycleTimer::currentSeconds(); 
     double overallTime = endTime - startTime;
 
     if (rank == view_index) {

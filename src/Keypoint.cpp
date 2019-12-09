@@ -50,10 +50,6 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 			for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
 				new_c = reflect(cols, c + c_offset);
 
-				// don't compare pixel to itself
-
-				assert(0 <= new_r < rows);
-				assert(0 <= new_c < cols);
 				// compare neighbors of prev, cur, and next scales
 				is_max &= (cur_val > prev_img.get(new_r, new_c));
 				is_max &= (cur_val > next_img.get(new_r, new_c));
@@ -67,11 +63,8 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 				}
 			}
 		}
-		// set as max value if max, else set 0
-		// if (is_max) printf("Found max: %d\n", cur_val);
-		result[r*cols + c] = cur_val * (is_max || is_min);
+		result[k] = cur_val * (is_max || is_min);
 	}
-	// printf("Average intensity: %f\n", avg_val / (float)cur_img.data.size());
 }
 
 
@@ -82,6 +75,8 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 
 	// two keypoint images
 	int rows = differences[0].rows, cols = differences[0].cols;
+	// use calloc to ensure all values 0 initially b/c ignored pixels have val = 0
+	// can't static init b/c variable size depends on rows * cols
 	int* kp1 = (int*)calloc(rows*cols, sizeof(int));
 	int* kp2 = (int*)calloc(rows*cols, sizeof(int));
 
@@ -91,6 +86,7 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 	std::vector<range> assignments;
 	allocate_work_pix_mpi(rows, cols, num_tasks, assignments);
 
+	// use separate ID's to let these two processes run without any barrier
 	getMaxes(differences[0], differences[1], differences[2], 
 		kp1, assignments[rank]);
 	send_to_others(kp1, reqs, rank, assignments[rank], kp1_id, num_tasks);
@@ -100,12 +96,10 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 	send_to_others(kp2, reqs, rank, assignments[rank], kp2_id, num_tasks);
     receive_from_others(kp2, reqs, assignments, rank, kp2_id);
 
-    for (int task = 0; task < num_tasks; task++) {
-        if (task == rank) continue;
-        MPI_Wait(&reqs[task], &stats[task]);
-    }
+    mpi_barrier(rank, num_tasks, reqs, stats);
 	printf("Thread %d finished finding keypoints\n", rank);
 
+	// store into keypoints images, then free temporary arrays
 	Image kp1_img(rows, cols, kp1);
 	Image kp2_img(rows, cols, kp2);
 	free(kp1);
