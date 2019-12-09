@@ -11,7 +11,7 @@ We are implementing a parallel version of the SIFT algorithm to match similar lo
 3. ```cd build```
 4. ```cmake ..```
 5. ```make```
-6. ```./Parallel_SIFT_main -a photo2.jpg -b photo1.jpg -d -i 0 -g 7```
+6. ```./Parallel_SIFT_main -a photo2.jpg -b photo1.jpg ```
 
 ### Background:
 Matching features across two images is a common task in many computer vision applications. For instance, everything from robots to the newest iPhone uses disparity estimation to generate depth images from 2D images, similar to how humans estimate depth through two eyes. This disparity estimation attempts to align two slight shifted images through feature matching. Motion capture and optical flow similarly attempt to match two images and identify the overall displacement between these matching parts of image.
