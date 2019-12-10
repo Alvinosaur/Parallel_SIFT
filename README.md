@@ -4,6 +4,7 @@
 ### Summary:
 We are implementing a parallel version of the SIFT algorithm to match similar localized features between two images. We will also analyze the different impacts of task-based and data-based parallelism on the SIFt algorithm.
 
+### [Final Report PDF: Analysis of Results](Final_Report.pdf)
 
 ### How to run Sequential:
 1. Clone the repo
