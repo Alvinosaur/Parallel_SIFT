@@ -132,7 +132,8 @@ void shrink_mpi(const Image & src, int* result, const range & start_end,
     int r_offset, c_offset;
     int i, j, k;
     int start = start_end.first, end = start_end.second;
-    int dst_cols = src.cols / scale;
+    int r, c, rows = src.rows, cols = src.cols;
+    int dst_cols = cols / scale;
     int dst_row, dst_col;
     for (k = start; k < end; k++) {
         j = k % dst_cols * scale;
@@ -140,7 +141,9 @@ void shrink_mpi(const Image & src, int* result, const range & start_end,
         total_val = 0;
         for (r_offset = 0; r_offset < scale; r_offset++) {
             for (c_offset = 0; c_offset < scale; c_offset++) {
-                total_val += src.get(i+r_offset, j+c_offset);
+                r = reflect(rows, i+r_offset);
+                c = reflect(cols, j+c_offset);
+                total_val += src.get(r, c);
             }
         }
 

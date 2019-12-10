@@ -97,7 +97,6 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
     receive_from_others(kp2, reqs, assignments, rank, kp2_id);
 
     mpi_barrier(rank, num_tasks, reqs, stats);
-	printf("Thread %d finished finding keypoints\n", rank);
 
 	// store into keypoints images, then free temporary arrays
 	Image kp1_img(rows, cols, kp1);
