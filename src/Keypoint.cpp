@@ -30,50 +30,7 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 	// int extrema[rows * cols];
 	// memset(extrema, 0, rows * cols);
 
-	// for (int i = 0; i < rows * cols; i++) {
-
-	// 	c = i % cols;
-	// 	if (c == cols -1 && r != rows -1) r++;
-
-	// 	cur_val = cur_img.get(r, c);
-	// 	is_max = 1;
-	// 	is_min = 1;
-	// 	// avg_val += abs(cur_val);
-	// 	is_intense = (abs(cur_val) > intensity_thresh);
-
-	// 	// printf("%d \n", is_intense);
-	// 	if (!is_intense) {
-	// 		res.data.push_back(0);
-	// 		continue;
-	// 	}
-
-	// 	// Iterate through a 3x3 window of neighboring pixels
-	// 	for (r_offset = -1; (r_offset <= 1) && is_max; r_offset++) {
-	// 		new_r = reflect(rows, r + r_offset);
-	// 		for (c_offset = -1; (c_offset <= 1) && is_max; c_offset++) {
-	// 			new_c = reflect(cols, c + c_offset);
-
-	// 			// don't compare pixel to itself
-
-	// 			assert(0 <= new_r < rows);
-	// 			assert(0 <= new_c < cols);
-	// 			// compare neighbors of prev, cur, and next scales
-	// 			is_max &= (cur_val > prev_img.get(new_r, new_c));
-	// 			is_max &= (cur_val > next_img.get(new_r, new_c));
-
-	// 			is_min &= (cur_val < prev_img.get(new_r, new_c));
-	// 			is_min &= (cur_val < next_img.get(new_r, new_c));
-
-	// 			if (new_r != r && new_c != c) {
-	// 				is_max &= (cur_val > cur_img.get(new_r, new_c));
-	// 				is_min &= (cur_val < cur_img.get(new_r, new_c));
-	// 			}
-	// 		}
-	// 	}
-
-	// 	res.data.push_back(cur_val * (is_max || is_min));	
-		
-	// }
+	
 
     #pragma omp parallel
     {
@@ -121,7 +78,6 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 				}
 			}
 
-			// res.data.push_back(cur_val * (is_max || is_min));	
 			private_data.push_back(cur_val * (is_max || is_min));
 			
 		}
@@ -129,8 +85,6 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 		res.data.insert(res.data.end(), private_data.begin(), private_data.end());
     }
 	
-
-	printf("Average intensity: %f\n", avg_val / (float)cur_img.data.size());
 }
 
 
@@ -160,8 +114,6 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 		}
 	}
 
-	getMaxes(differences[0], differences[1], differences[2], kp1);
-	getMaxes(differences[1], differences[2], differences[3], kp2);
 	keypoint_results.push_back(kp1);
 	keypoint_results.push_back(kp2);
 
@@ -184,6 +136,7 @@ double Keypoint::mark_keypoints(Image & src, std::vector<coord> & keypoints) {
 	// set all values to 0 initially
 	src.data.assign(src.rows * src.cols, 0); 
 
+	#pragma omp parallel for schedule(static)
 	for (int i = 0; i < keypoints.size(); i++) {
 		coord rc = keypoints[i];
 		row = rc.first;
@@ -219,7 +172,6 @@ double Keypoint::find_corners_gradients(
 	int count = 0;
 
 
-	// #pragma omp parallel shared(points_with_angle)
 	for (int i = 0; i < rows * cols; i++) {
 		c = i % cols;
 		if (c == cols -1 && r != rows -1) r++;
@@ -394,7 +346,6 @@ double Keypoint::store_features(std::vector<KeypointFeature> & kp_features,
 		c = i % cols;
 		if (c == cols -1 && r != rows -1) r++;
         descriptors.at<float>(r, c) = kp_features[r].grad_histogram[c];
-
     }
 
     double endTime = CycleTimer::currentSeconds();

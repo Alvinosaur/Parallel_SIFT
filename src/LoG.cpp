@@ -68,76 +68,34 @@ double LoG::find_LoG_images(std::vector<Image> & first_octave_LoG,
 
     double SIFT_TIME = 50000.;
 
-    // SIFT_TIME = shrink_half(orig1, half);
-    // printf("shrink_half:            %.3f ms\n", 1000.f * SIFT_TIME);
-    // SIFT_TIME = create_blurs(second_octave_LoG, half);
-    // printf("blur_hafl:              %.3f ms\n", 1000.f *SIFT_TIME);
-
-    // SIFT_TIME = shrink_quarter(orig1, quarter);
-    // printf("shrink_quar:            %.3f ms\n", 1000.f *SIFT_TIME);
-    // SIFT_TIME = create_blurs(third_octave_LoG, quarter);
-    // printf("blur_quart:             %.3f ms\n", 1000.f * SIFT_TIME);
-
-
-    // SIFT_TIME = shrink_eighth(orig1, eighth);
-    // printf("shrink_eigh:            %.3f ms\n", 1000.f * SIFT_TIME);
-    // SIFT_TIME = create_blurs(fourth_octave_LoG, eighth);
-    // printf("blur_eight:             %.3f ms\n", 1000.f * SIFT_TIME);
-
-    // SIFT_TIME = create_blurs(first_octave_LoG, orig1);
-    // printf("blur_orig:              %.3f ms\n", 1000.f * SIFT_TIME);
-
 
     #pragma omp parallel sections shared(orig1)
     {
         #pragma omp section
         {
             SIFT_TIME = shrink_half(orig1, half);
-            // printf("shrink_half:                    %.3f ms\n", 1000.f * SIFT_TIME);
             SIFT_TIME = create_blurs(second_octave_LoG, half);
-            // printf("blur_hafl:                      %.3f ms\n", 1000.f *SIFT_TIME);
 
         }
         
         #pragma omp section
         {
             SIFT_TIME = shrink_quarter(orig1, quarter);
-            // printf("shrink_quar:                    %.3f ms\n", 1000.f *SIFT_TIME);
             SIFT_TIME = create_blurs(third_octave_LoG, quarter);
-            // printf("blur_quart:                     %.3f ms\n", 1000.f * SIFT_TIME);
 
         }
         #pragma omp section
         {
             SIFT_TIME = shrink_eighth(orig1, eighth);
-            // printf("shrink_eigh:                    %.3f ms\n", 1000.f * SIFT_TIME);
             SIFT_TIME = create_blurs(fourth_octave_LoG, eighth);
-            // printf("blur_eight:                     %.3f ms\n", 1000.f * SIFT_TIME);
         }
 
         #pragma omp section
         {
             SIFT_TIME = create_blurs(first_octave_LoG, orig1);
-            // printf("blur_orig:                      %.3f ms\n", 1000.f * SIFT_TIME);
         }
             
     }
-
-    // #pragma omp parallel 
-    // {
-    //     #pragma omp single
-    //     {
-    //         #pragma omp task
-    //         create_blurs(second_octave_LoG, half);
-    //         #pragma omp task
-    //         create_blurs(third_octave_LoG, quarter);
-    //         #pragma omp task
-    //         create_blurs(fourth_octave_LoG, eighth);
-    //         #pragma omp task
-    //         create_blurs(first_octave_LoG, orig);
-
-    //     }
-    // }
 
 
     double endTime = CycleTimer::currentSeconds();
@@ -183,14 +141,10 @@ double LoG::create_blurs(std::vector<Image> & result, Image & src) {
         {
             #pragma omp single
             {
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 0);
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 1);
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 2);
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 3);
+                #pragma omp task untied 
+                SIFT_TIME = gb.convolve_half_y(src, temp_temp, temp, var, 0);
+                #pragma omp task untied 
+                SIFT_TIME = gb.convolve_half_y(src, temp_temp, temp, var, 1);
             }
         }
 
@@ -198,88 +152,12 @@ double LoG::create_blurs(std::vector<Image> & result, Image & src) {
         {
             #pragma omp single
             {
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 0);
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 1);
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 2);
-                #pragma omp task untied final(src.rows < 300) 
-                SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 3);
+                #pragma omp task untied 
+                SIFT_TIME = gb.convolve_half_x(src, temp_temp, temp, var, 0);
+                #pragma omp task untied  
+                SIFT_TIME = gb.convolve_half_x(src, temp_temp, temp, var, 1);
             }
         }
-
-        //  #pragma omp sections 
-        // {
-  
-        //     #pragma omp section
-        //     SIFT_TIME = gb.convolve_half_y(src, temp_temp, temp, var, 0);
-        //     #pragma omp section
-        //     SIFT_TIME = gb.convolve_half_y(src, temp_temp, temp, var, 1);
-            
-        // }
-
-        // #pragma omp sections 
-        // {
-        //     #pragma omp section
-        //     SIFT_TIME = gb.convolve_half_x(src, temp_temp, temp, var, 0);
-        //     #pragma omp section
-        //     SIFT_TIME = gb.convolve_half_x(src, temp_temp, temp, var, 1);
-            
-        // }
-
-        
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 0);
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 1);
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 2);
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 3);
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 4);
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 5);
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 6);
-        // SIFT_TIME = gb.convolve_eighths_y(src, temp_temp, temp, var, 7);
-
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 0);
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 1);
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 2);
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 3);
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 4);
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 5);
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 6);
-        // SIFT_TIME = gb.convolve_eighths_x(src, temp_temp, temp, var, 7);
-
-
-
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 0);
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 1);
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 2);
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, distrib, var, 3);
-
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 0);
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 1);
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 2);
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, distrib, var, 3);
-
-
-
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 0);
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 1);
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 2);
-        // SIFT_TIME = gb.convolve_quarters_y(src, temp_temp, temp, var, 3);
-
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 0);
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 1);
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 2);
-        // SIFT_TIME = gb.convolve_quarters_x(src, temp_temp, temp, var, 3);
-
-
-        // SIFT_TIME = gb.convolve_half_y(src, temp_temp, temp, var, 0);
-        // SIFT_TIME = gb.convolve_half_y(src, temp_temp, temp, var, 1);
-        // SIFT_TIME = gb.convolve_half_x(src, temp_temp, temp, var, 0);
-        // SIFT_TIME = gb.convolve_half_x(src, temp_temp, temp, var, 1);
-
-
-        // SIFT_TIME = gb.convolve(src, temp, var);
-        // printf("convolve for %d on %f: %.3f ms\n", i, var, 1000.f * SIFT_TIME);
 
 
         // subtract from previous scale to obtain gaussian difference

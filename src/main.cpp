@@ -123,10 +123,12 @@ double find_keypoint_features(Image & src, cv::Mat & result_features,
     ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave1_log, octave1_kp);
     TOTAL_TIME += ADD_TIME;
     printf("keypoint_find for octave1 time:        %.3f ms\n", 1000.f * SIFT_TIME);
-    // kp_finder.find_keypoints(octave1_log, octave1_kp);
-    // kp_finder.find_keypoints(octave2_log, octave2_kp);
-    // kp_finder.find_keypoints(octave3_log, octave3_kp);
-    // kp_finder.find_keypoints(octave4_log, octave4_kp);
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave2_log, octave2_kp);
+    TOTAL_TIME += ADD_TIME;
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave3_log, octave3_kp);
+    TOTAL_TIME += ADD_TIME;
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave4_log, octave4_kp);
+    TOTAL_TIME += ADD_TIME;
 
     if (debug) cout << "Storing result" << endl;
     printf("%lu, %d\n", octave1_kp.size(), view_index);
@@ -160,11 +162,6 @@ double find_keypoint_features(Image & src, cv::Mat & result_features,
     printf("TOTAL_TIME:                            %.3f ms\n", 1000.f * TOTAL_TIME);
     printf("/////////////////////////////////////////////////////////////////////////////////\n");
 
-    // cv::Mat res_output;
-    // octave1_log[3].store_opencv(res_output);
-    // imwrite( "after_blur_result.jpg", res_output);
-    // imshow( "Blurred pikachu!", res_output );
-    // cv::waitKey(0);
     
     return TOTAL_TIME;
 }
