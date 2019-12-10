@@ -97,7 +97,6 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
     receive_from_others(kp2, reqs, assignments, rank, kp2_id);
 
     mpi_barrier(rank, num_tasks, reqs, stats);
-	printf("Thread %d finished finding keypoints\n", rank);
 
 	// store into keypoints images, then free temporary arrays
 	Image kp1_img(rows, cols, kp1);
@@ -155,20 +154,14 @@ void Keypoint::find_corners_gradients(
 	std::vector<range> assignments;
 	allocate_work_pix_mpi(rows, cols, num_tasks, assignments);
 	int start = assignments[rank].first, end = assignments[rank].second;
+	printf("Thread %d handling (%d, %d)\n", start, end);
 
-	// 2 sets for send/receive magnitudes, 2 sets for angles
-    MPI_Request other_reqs[num_tasks * 4];
-    MPI_Status other_stats[num_tasks * 4];
-
-	// first two sets dedicated to magnitudes
-	MPI_Request* mag_reqs = other_reqs;
-	MPI_Status* mag_stats = other_stats;
-
-	// second set dedicated to angles
-	MPI_Request* ang_reqs = &other_reqs[num_tasks * 2];
-	MPI_Status* ang_stats = &other_stats[num_tasks * 2];
+	MPI_Request mag_reqs[num_tasks * 2];
+	MPI_Request ang_reqs[num_tasks * 2];
 
 	for (k = start; k < end; k++) {
+		r = k / cols;
+		r = k % cols;
 		prev_rp = src.get(reflect(rows, r-1), c);
 		next_rp = src.get(reflect(rows, r+1), c);
 		prev_cp = src.get(r, reflect(cols, c-1));
@@ -186,9 +179,11 @@ void Keypoint::find_corners_gradients(
 		if (is_corner(abs(grad_x), abs(grad_y))) {
 			coord new_kp(r, c);
 			keypoints.push_back(new_kp);
-			kp_locs[kp_count++] = r * c;
+			kp_locs[start + kp_count++] = r * c;
 		}
 	}
+
+	printf("Thread %d found %d keypoints\n", rank, kp_count);
 
 	// transfer all keypoints first so can receive them first without waiting
 	// for other data
@@ -209,22 +204,22 @@ void Keypoint::find_corners_gradients(
     receive_from_others(grad_angs, ang_reqs, assignments, rank, GRAD);
 
 	// need to do post-processing on this array
-	range new_range;
+	range other_task_r;
 	int max_kp;
 	for (int task = 0; task < num_tasks; task++) {
         if (task == rank) continue;  // don't need to request from self
-        new_range = assignments[task];
-        max_kp = new_range.second - new_range.first;
+        other_task_r = assignments[task];
+        max_kp = other_task_r.second - other_task_r.first;
 		// Need blocking receive to track the number of items received
-		MPI_Recv(kp_locs, max_kp, MPI_INT, task, KP, MPI_COMM_WORLD,
-            &stats[task]);
+		MPI_Recv(&kp_locs[other_task_r.first], max_kp, MPI_INT, task, KP, 
+			MPI_COMM_WORLD, &stats[task]);
 		MPI_Get_count(&stats[task], MPI_INT, &kp_counts[task]);
 
 		// now store all these in local keypoints vector
 		kp_count = kp_counts[task];
 		for (int kp_i = 0; kp_i < kp_count; kp_i++) {
 			// locations of keypoints, stored starting at offset
-			k = kp_locs[new_range.first + kp_i];
+			k = kp_locs[other_task_r.first + kp_i];
 			r = k / cols;
 			c = k % cols;
 			coord pos(r, c);
@@ -233,8 +228,8 @@ void Keypoint::find_corners_gradients(
     }
 
 	// make sure other non-blocking communication has finished
-	mpi_barrier(rank, num_tasks, mag_reqs, mag_stats);
-	mpi_barrier(rank, num_tasks, ang_reqs, ang_stats);
+	mpi_barrier(rank, num_tasks, mag_reqs, NULL);
+	mpi_barrier(rank, num_tasks, ang_reqs, NULL);
 }
 
 int squared_dist(int x, int y) {

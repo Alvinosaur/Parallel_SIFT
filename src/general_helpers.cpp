@@ -20,7 +20,8 @@ void mpi_barrier(int rank, int num_tasks,
         MPI_Request* reqs, MPI_Status* stats) {
     for (int task = 0; task < num_tasks; task++) {
         if (task == rank) continue;
-        MPI_Wait(&reqs[task],&stats[task]);
+        if (stats != NULL) MPI_Wait(&reqs[task],&stats[task]);
+        else MPI_Wait(&reqs[task],MPI_STATUS_IGNORE);
     }
 }
 
