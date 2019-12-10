@@ -9,7 +9,7 @@ set(CFLAGS
 
 add_compile_options(${CFLAGS})
 # NOTE: The below path is for CMU machines
-# set(OpenCV_DIR /usr/local/depot/opencv/share/OpenCV)
+set(OpenCV_DIR /usr/local/depot/opencv/share/OpenCV)
 find_package(OpenCV REQUIRED)
 
 include_directories(
