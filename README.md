@@ -5,13 +5,22 @@
 We are implementing a parallel version of the SIFT algorithm to match similar localized features between two images. We will also analyze the different impacts of task-based and data-based parallelism on the SIFt algorithm.
 
 
-### How to run:
+### How to run Sequential:
 1. Clone the repo
 2. Install [OpenCV](https://docs.opencv.org/master/df/d65/tutorial_table_of_content_introduction.html)
 3. ```cd build```
 4. ```cmake ..```
 5. ```make```
-6. ```./Parallel_SIFT_main -a photo2.jpg -b photo1.jpg -d -i 0 -g 7```
+6. Sequential: ```./Parallel_SIFT_main -a photo2.jpg -b photo1.jpg -d -i 0 -g 7```
+
+### How to run Parallel OpenMPI:
+1. Repeat steps 1 and 2 for sequential above
+2. ```git checkout openMPI```
+3. Same build steps 3 through 5 as above
+4. ```mpiexec -n 8 ./Parallel_SIFT_main -a pikachu.jpg -b pikachu.jpg -g 12```
+
+### How to run Parallel OpenMP:
+1. Same steps as Sequential, but in ```openMP``` branch
 
 ### Background:
 Matching features across two images is a common task in many computer vision applications. For instance, everything from robots to the newest iPhone uses disparity estimation to generate depth images from 2D images, similar to how humans estimate depth through two eyes. This disparity estimation attempts to align two slight shifted images through feature matching. Motion capture and optical flow similarly attempt to match two images and identify the overall displacement between these matching parts of image.

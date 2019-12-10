@@ -206,10 +206,12 @@ void normalize_vector(float* vec, int N) {
 	}
 }
 
-void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
+double Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
 		std::vector<PointWithAngle> & all_points, 
 		std::vector<KeypointFeature> & final_keypoints, 
 		int rows, int cols, int size) {
+
+	double startTime = CycleTimer::currentSeconds();
 
 	int row, col, new_r, new_c, r_offset, c_offset, region_idx;
 	int ang, ang_bin;
@@ -269,10 +271,17 @@ void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
 		normalize_vector(kp_feature.grad_histogram, FEATURE_VEC_SIZE);
 		final_keypoints.push_back(kp_feature);
 	}
+
+	double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
-void Keypoint::store_features(std::vector<KeypointFeature> & kp_features,
+double Keypoint::store_features(std::vector<KeypointFeature> & kp_features,
 		cv::Mat & descriptors) {
+
+	double startTime = CycleTimer::currentSeconds();
+
 	int rows = kp_features.size();
 	int cols = FEATURE_VEC_SIZE;
 	descriptors.create(rows, cols, CV_32F);
@@ -282,10 +291,17 @@ void Keypoint::store_features(std::vector<KeypointFeature> & kp_features,
             descriptors.at<float>(r, c) = kp_features[r].grad_histogram[c];
         }
     }
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }
 
-void Keypoint::store_keypoints(std::vector<KeypointFeature> & keypoints_src,
+double Keypoint::store_keypoints(std::vector<KeypointFeature> & keypoints_src,
 		std::vector<cv::KeyPoint> & cv_keypoints_dst, int octave, int cols) {
+
+	double startTime = CycleTimer::currentSeconds();
+
 	int id;
 	for (KeypointFeature kp : keypoints_src) {
 		cv::Point2f pos;
@@ -295,4 +311,8 @@ void Keypoint::store_keypoints(std::vector<KeypointFeature> & keypoints_src,
 		cv::KeyPoint cv_kp(pos, kp.size, kp.angle, kp.magnitude, id);
 		cv_keypoints_dst.push_back(cv_kp);
 	}
+
+    double endTime = CycleTimer::currentSeconds();
+    double overallTime = endTime - startTime;
+    return overallTime;
 }

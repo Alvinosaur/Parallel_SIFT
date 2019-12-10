@@ -13,19 +13,23 @@
 #include "LoG.h"
 #include "Image.h"
 #include "general_helpers.h"
+<<<<<<< HEAD
 #include "CycleTimer.h"
 // #include <omp.h>
+=======
+#include <omp.h>
+>>>>>>> dcebbb5ba5804913282f2780362b900d76669e48
 
 
 using namespace std;
 
 bool debug = false;
 int view_index = 0;
-float grad_threshold = 0;
-float intensity_threshold = 1;
+float grad_threshold = 7.0;
+float intensity_threshold = 0;
 
-void find_keypoint_features(Image & src, cv::Mat & result_features, 
-    std::vector<cv::KeyPoint> & cv_keypoints);
+double find_keypoint_features(Image & src, cv::Mat & result_features, 
+    std::vector<cv::KeyPoint> & cv_keypoints, int imgID);
 
 int main(int argc, char* argv[]){
     float variance = 1;
@@ -41,6 +45,8 @@ int main(int argc, char* argv[]){
         exit(-1);
     };
 
+    double TIME = 0.0;
+
     cv::Mat src1_mat = cv::imread(img1_path.c_str(),
         CV_LOAD_IMAGE_GRAYSCALE);
     cv::Mat src2_mat = cv::imread(img2_path.c_str(),
@@ -50,6 +56,7 @@ int main(int argc, char* argv[]){
 
     cv::Mat res_output, features1, features2;
     std::vector<cv::KeyPoint> keypoints1, keypoints2;
+<<<<<<< HEAD
 
     double total_time_start = CycleTimer::currentSeconds();
     find_keypoint_features(src1, features1, keypoints1);
@@ -57,6 +64,10 @@ int main(int argc, char* argv[]){
     double total_time_end = CycleTimer::currentSeconds();
     double total_time = total_time_end - total_time_start;
     printf("Total parallel time: %lf\n", total_time);
+=======
+    TIME += find_keypoint_features(src1, features1, keypoints1, 1);
+    TIME += find_keypoint_features(src2, features2, keypoints2, 2);
+>>>>>>> dcebbb5ba5804913282f2780362b900d76669e48
 
     // //-- Step 3: Matching descriptor vectors using FLANN matcher
     cv::FlannBasedMatcher matcher;
@@ -88,28 +99,42 @@ int main(int argc, char* argv[]){
         good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
         vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
+    printf("OVERALL TIME:                          %.3f ms\n", 1000.f * TIME);
+
     imwrite( "after_blur_result.jpg", res_output);
-    cv::namedWindow( "Gray image", CV_WINDOW_AUTOSIZE );
     imshow( "Blurred pikachu!", res_output );
     cv::waitKey(0);
     return 0;
 }
 
-void find_keypoint_features(Image & src, cv::Mat & result_features, 
-        std::vector<cv::KeyPoint> & cv_keypoints) {
+double find_keypoint_features(Image & src, cv::Mat & result_features, 
+        std::vector<cv::KeyPoint> & cv_keypoints, int imgID) {
     ///////////////////////////////////// Algorithm BEGIN /////////////////////////////////////
-    double SIFT_TIME;
+    double SIFT_TIME = 50000.;
+    double TOTAL_TIME = 0.0;
+    double ADD_TIME = 0.0;
+
+    printf("/////////////////////////////////////////////////////////////////////////////////\n");
+    printf("SIFT algorithm for image%d\n", imgID);
+
 
     ///////////////////////////////////// LoG BEGIN /////////////////////////////////////
     // Find Difference of Gaussian Images using LoG
     LoG LoG_processor(src);
     std::vector<Image> octave1_log, octave2_log, octave3_log, octave4_log;
 
+<<<<<<< HEAD
     double log_time_start = CycleTimer::currentSeconds();
     SIFT_TIME = LoG_processor.find_LoG_images(
         octave1_log, octave2_log, octave3_log, octave4_log);
     double log_time_end = CycleTimer::currentSeconds();
     printf("LoG process time: %.3f\n", log_time_end - log_time_start);
+=======
+    ADD_TIME = SIFT_TIME = LoG_processor.find_LoG_images(
+        octave1_log, octave2_log, octave3_log, octave4_log);
+    printf("LoG process time:                      %.3f ms\n", 1000.f * SIFT_TIME);
+    TOTAL_TIME += ADD_TIME;
+>>>>>>> dcebbb5ba5804913282f2780362b900d76669e48
     ///////////////////////////////////// LoG END /////////////////////////////////////
 
 
@@ -118,11 +143,23 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     Keypoint kp_finder(src, grad_threshold, intensity_threshold);
     std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
 
+<<<<<<< HEAD
     SIFT_TIME = std::min(SIFT_TIME, kp_finder.find_keypoints(octave1_log, octave1_kp));
     kp_finder.find_keypoints(octave1_log, octave1_kp);
     kp_finder.find_keypoints(octave2_log, octave2_kp);
     kp_finder.find_keypoints(octave3_log, octave3_kp);
     kp_finder.find_keypoints(octave4_log, octave4_kp);
+=======
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave1_log, octave1_kp);
+    TOTAL_TIME += ADD_TIME;
+    printf("keypoint_find for octave1 time:        %.3f ms\n", 1000.f * SIFT_TIME);
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave2_log, octave2_kp);
+    TOTAL_TIME += ADD_TIME;
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave3_log, octave3_kp);
+    TOTAL_TIME += ADD_TIME;
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoints(octave4_log, octave4_kp);
+    TOTAL_TIME += ADD_TIME;
+>>>>>>> dcebbb5ba5804913282f2780362b900d76669e48
 
     if (debug) cout << "Storing result" << endl;
     printf("%lu, %d\n", octave1_kp.size(), view_index);
@@ -130,6 +167,7 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     Image gradx(src.rows, src.cols), grady(src.rows, src.cols);
     std::vector<coord> keypoints1, keypoints2, keypoints3, keypoints4;
 
+<<<<<<< HEAD
     double corner_time_start = CycleTimer::currentSeconds();
     std::vector<PointWithAngle> points_with_angle1, points_with_angle2,
         points_with_angle3, points_with_angle4;
@@ -165,4 +203,33 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     kp_finder.store_keypoints(keypoint_features1, cv_keypoints, 1, src.cols);
     
     kp_finder.store_features(keypoint_features1, result_features);
+=======
+    std::vector<PointWithAngle> points_with_angle;
+    ADD_TIME = SIFT_TIME = kp_finder.find_corners_gradients(
+        octave1_kp[view_index], keypoints, points_with_angle);
+    TOTAL_TIME += ADD_TIME;
+    printf("corner detection for octave1 time:     %.3f ms\n", 1000.f * SIFT_TIME);
+    printf("keypoints: %d\n", keypoints.size());
+
+    std::vector<float> kp_gradients;
+
+    std::vector<KeypointFeature> keypoint_features;
+    ADD_TIME = SIFT_TIME = kp_finder.find_keypoint_orientations(keypoints, points_with_angle, 
+        keypoint_features, src.rows, src.cols, standard_variances[2]);
+    TOTAL_TIME += ADD_TIME;
+    printf("keypoint orientation for octave1 time: %.3f ms\n", 1000.f * SIFT_TIME);
+
+    ADD_TIME = SIFT_TIME = kp_finder.store_keypoints(keypoint_features, cv_keypoints, 1, src.cols);
+    TOTAL_TIME += ADD_TIME;
+    printf("keypoint storing for octave1 time:     %.3f ms\n", 1000.f * SIFT_TIME);
+
+    ADD_TIME = SIFT_TIME = kp_finder.store_features(keypoint_features, result_features);
+    TOTAL_TIME += ADD_TIME;
+    printf("feature generation for octave1 time:   %.3f ms\n", 1000.f * SIFT_TIME);
+
+    printf("TOTAL_TIME:                            %.3f ms\n", 1000.f * TOTAL_TIME);
+    printf("/////////////////////////////////////////////////////////////////////////////////\n");
+
+    return TOTAL_TIME;
+>>>>>>> dcebbb5ba5804913282f2780362b900d76669e48
 }
