@@ -125,12 +125,13 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     LoG LoG_processor(src, num_tasks, rank, reqs, stats);
     std::vector<Image> octave1_log, octave2_log, octave3_log, octave4_log;
 
-    double log_time = 0;
-    log_time = LoG_processor.find_LoG_images(
+    double log_time_start = CycleTimer::currentSeconds();
+    LoG_processor.find_LoG_images(
         octave1_log, octave2_log, octave3_log, octave4_log);
-    printf("LoG process time: %.3f s\n", log_time);
+    double log_time_end = CycleTimer::currentSeconds();
+    printf("LoG process time: %.3f s\n", log_time_end - log_time_start);
     
-    ///////////////////////////////////// LoG END /////////////////////////////////////
+    ///////////////////////////////////// LoG END ///////////////////////////////////// 
 
 
     ///////////////////////////////////// Keypoint begin /////////////////////////////////////
@@ -139,12 +140,16 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
         rank, num_tasks, reqs, stats);
     std::vector<Image> octave1_kp, octave2_kp, octave3_kp, octave4_kp;
 
+    double find_kp_time_start = CycleTimer::currentSeconds();
     double find_kp_time = 0;
     find_kp_time += kp_finder.find_keypoints(octave1_log, octave1_kp);
     find_kp_time += kp_finder.find_keypoints(octave1_log, octave1_kp);
     find_kp_time += kp_finder.find_keypoints(octave2_log, octave2_kp);
     find_kp_time += kp_finder.find_keypoints(octave3_log, octave3_kp);
     find_kp_time += kp_finder.find_keypoints(octave4_log, octave4_kp);
+    double find_kp_time_end = CycleTimer::currentSeconds();
+    printf("find kp process time: %.3f s\n", 
+        find_kp_time_end - find_kp_time_start);
 
     std::vector<coord> keypoints1, keypoints2, keypoints3, keypoints4;
 
@@ -163,7 +168,7 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     int magnitudes3[oct3_rows * oct3_cols];
     int magnitudes4[oct4_rows * oct4_cols];
 
-    double start_kp_find_time = CycleTimer::currentSeconds();
+    double start_corner_find_time = CycleTimer::currentSeconds();
     kp_finder.find_corners_gradients(
         octave1_kp[view_index], keypoints1, grad_angs1, magnitudes1);
     kp_finder.find_corners_gradients(
@@ -172,9 +177,9 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
         octave3_kp[view_index], keypoints3, grad_angs3, magnitudes3);
     kp_finder.find_corners_gradients(
         octave4_kp[view_index], keypoints4, grad_angs4, magnitudes4);
-    double end_kp_find_time = CycleTimer::currentSeconds();
-    double kp_find_time = end_kp_find_time - start_kp_find_time;
-    printf("corner, mag, ang detection time: %.3f s\n", kp_find_time);
+    double end_corner_find_time = CycleTimer::currentSeconds();
+    printf("corner, mag, ang detection time: %.3f s\n", 
+        end_corner_find_time - start_corner_find_time);
 
     if (rank == MASTER) {
         double start_kp_orient_time = CycleTimer::currentSeconds();
