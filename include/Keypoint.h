@@ -51,7 +51,7 @@ public:
 	double find_keypoints(std::vector<Image> & differences, 
 		std::vector<Image> & keypoint_results);
 
-	void find_corners_gradients(const Image & src, 
+	void find_corners_gradients(Image & src, 
 		std::vector<coord> & keypoints, int* grad_angs, int* magnitudes);
 
 	bool is_corner(int grad_x, int grad_y);

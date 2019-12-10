@@ -13,6 +13,8 @@
 #define REGION_LEN 8
 #define RAD_TO_DEG ((float)180 / M_PI)
 
+#define MASTER 0
+
 const int MAX_VAL = 255;
 
 Keypoint::Keypoint(Image & src_x, float grad_thresh_x, float intensity_thresh_x,
@@ -28,7 +30,6 @@ void Keypoint::getMaxes(Image & prev_img, Image & cur_img, Image & next_img,
 	int start = start_end.first, end = start_end.second;
 	int is_max, is_min, is_intense;
 	int rows = cur_img.rows, cols = cur_img.cols;
-	float avg_val = 0;
 
 	for (k = start; k < end; k++) {
 		r = k / cols;
@@ -112,8 +113,6 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 }
 
 
-// void Keypoint::filter_keypoints(std::)
-
 bool Keypoint::is_corner(int grad_x, int grad_y) {
 	return (grad_x > grad_thresh) && (grad_y  > grad_thresh);
 }
@@ -138,7 +137,7 @@ int rad_to_deg(float ang_rad) {
 }
 
 void Keypoint::find_corners_gradients(
-		const Image & src, std::vector<coord> & keypoints,
+		Image & src, std::vector<coord> & keypoints,
 		int* grad_angs, int* magnitudes) {
 	int r, c, k;
 	// previous and next adjacent pixel values
@@ -154,20 +153,21 @@ void Keypoint::find_corners_gradients(
 	std::vector<range> assignments;
 	allocate_work_pix_mpi(rows, cols, num_tasks, assignments);
 	int start = assignments[rank].first, end = assignments[rank].second;
-	printf("Thread %d handling (%d, %d)\n", start, end);
 
 	MPI_Request mag_reqs[num_tasks * 2];
 	MPI_Request ang_reqs[num_tasks * 2];
 
 	for (k = start; k < end; k++) {
 		r = k / cols;
-		r = k % cols;
+		c = k % cols;
 		prev_rp = src.get(reflect(rows, r-1), c);
 		next_rp = src.get(reflect(rows, r+1), c);
 		prev_cp = src.get(r, reflect(cols, c-1));
 		next_cp = src.get(r, reflect(cols, c+1));
 		grad_x = next_cp - prev_cp;
 		grad_y = next_rp - prev_rp;
+
+		printf("gradx, grady: %f, %f\n", grad_x, grad_y);
 
 		PointWithAngle newp;
 		newp.angle = rad_to_deg(atan2f(grad_y, grad_x));
@@ -179,11 +179,11 @@ void Keypoint::find_corners_gradients(
 		if (is_corner(abs(grad_x), abs(grad_y))) {
 			coord new_kp(r, c);
 			keypoints.push_back(new_kp);
-			kp_locs[start + kp_count++] = r * c;
+			kp_locs[start + kp_count] = r * c;
+			kp_count++;
+			
 		}
 	}
-
-	printf("Thread %d found %d keypoints\n", rank, kp_count);
 
 	// transfer all keypoints first so can receive them first without waiting
 	// for other data
@@ -230,6 +230,12 @@ void Keypoint::find_corners_gradients(
 	// make sure other non-blocking communication has finished
 	mpi_barrier(rank, num_tasks, mag_reqs, NULL);
 	mpi_barrier(rank, num_tasks, ang_reqs, NULL);
+
+	// if (rank == MASTER) {
+	// 	for (int i = 0; i < rows * cols; i++) {
+	// 		printf("Mag: %f, Ang: %f\n", magnitudes[i], grad_angs[i]);
+	// 	}
+	// }
 }
 
 int squared_dist(int x, int y) {

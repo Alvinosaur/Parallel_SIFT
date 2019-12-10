@@ -14,8 +14,10 @@
 #include "LoG.h"
 #include "Image.h"
 #include "general_helpers.h"
+#include "CycleTimer.h"
 // #include <omp.h>
 
+#define MASTER 0
 
 using namespace std;
 
@@ -68,42 +70,46 @@ int main(int argc, char* argv[]){
     find_keypoint_features(src2, features2, keypoints2, num_tasks, rank,
         reqs, stats);
 
-    MPI_Finalize();
-
     //-- Step 3: Matching descriptor vectors using FLANN matcher
-    // cv::FlannBasedMatcher matcher;
-    // std::vector< cv::DMatch > matches;
-    // matcher.match( features1, features2, matches );
+    if (rank == MASTER) {
+        cv::FlannBasedMatcher matcher;
+        std::vector< cv::DMatch > matches;
+        matcher.match( features1, features2, matches );
 
-    // double max_dist = 0; double min_dist = 100;
+        double max_dist = 0; double min_dist = 100;
 
-    // // //-- Quick calculation of max and min distances between keypoints
-    // for( int i = 0; i < features1.rows; i++ )
-    // { double dist = matches[i].distance;
-    //     if( dist < min_dist ) min_dist = dist;
-    //     if( dist > max_dist ) max_dist = dist;
-    // }
+        // //-- Quick calculation of max and min distances between keypoints
+        for( int i = 0; i < features1.rows; i++ )
+        { double dist = matches[i].distance;
+            if( dist < min_dist ) min_dist = dist;
+            if( dist > max_dist ) max_dist = dist;
+        }
 
-    // //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
-    // //-- or a small arbitary value ( 0.02 ) in the event that min_dist is very
-    // //-- small)
-    // //-- PS.- radiusMatch can also be used here.
-    // std::vector< cv::DMatch > good_matches;
+        //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
+        //-- or a small arbitary value ( 0.02 ) in the event that min_dist is very
+        //-- small)
+        //-- PS.- radiusMatch can also be used here.
+        std::vector< cv::DMatch > good_matches;
 
-    // for( int i = 0; i < features1.rows; i++ )
-    // { if( matches[i].distance <= max(2*min_dist, 0.02) )
-    //     { good_matches.push_back( matches[i]); }
-    // }
+        for( int i = 0; i < features1.rows; i++ )
+        { if( matches[i].distance <= max(2*min_dist, 0.02) )
+            { good_matches.push_back( matches[i]); }
+        }
 
-    // //-- Draw only "good" matches
-    // drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
-    //     good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
-    //     vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+        //-- Draw only "good" matches
+        printf("Found %d, %d keypoints in images 1 and 2\n", 
+            keypoints1.size(), keypoints2.size());
+        drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
+            good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
+            vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
-    // imwrite( "after_blur_result.jpg", res_output);
-    // imshow( "Blurred pikachu!", res_output );
-    // cv::waitKey(0);
-    // return 0;
+        imwrite( "after_blur_result.jpg", res_output);
+        imshow( "Blurred pikachu!", res_output );
+        cv::waitKey(0);
+    }
+
+    MPI_Finalize();
+    return 0;
 }
 
 void find_keypoint_features(Image & src, cv::Mat & result_features, 
@@ -155,30 +161,41 @@ void find_keypoint_features(Image & src, cv::Mat & result_features,
     int magnitudes3[oct3_rows * oct3_cols];
     int magnitudes4[oct4_rows * oct4_cols];
 
+    double start_kp_find_time = CycleTimer::currentSeconds();
     kp_finder.find_corners_gradients(
         octave1_kp[view_index], keypoints1, grad_angs1, magnitudes1);
-    // kp_finder.find_corners_gradients(
-    //     octave2_kp[view_index], keypoints2, grad_angs2, magnitudes2);
-    // kp_finder.find_corners_gradients(
-    //     octave3_kp[view_index], keypoints3, grad_angs3, magnitudes3);
-    // kp_finder.find_corners_gradients(
-    //     octave4_kp[view_index], keypoints4, grad_angs4, magnitudes4);
-    printf("corner detection for octave1 time: %.3f s\n", SIFT_TIME);
+    kp_finder.find_corners_gradients(
+        octave2_kp[view_index], keypoints2, grad_angs2, magnitudes2);
+    kp_finder.find_corners_gradients(
+        octave3_kp[view_index], keypoints3, grad_angs3, magnitudes3);
+    kp_finder.find_corners_gradients(
+        octave4_kp[view_index], keypoints4, grad_angs4, magnitudes4);
+    double end_kp_find_time = CycleTimer::currentSeconds();
+    double kp_find_time = end_kp_find_time - start_kp_find_time;
+    printf("corner, mag, ang detection time: %.3f s\n", kp_find_time);
 
-    std::vector<KeypointFeature> keypoint_features1, keypoint_features2, 
-        keypoint_features3, keypoint_features4;
-    // kp_finder.find_keypoint_orientations(keypoints1, grad_angs1, magnitudes1,
-    //     keypoint_features1, src.rows, src.cols, standard_variances[2]);
-    // kp_finder.find_keypoint_orientations(keypoints2, grad_angs2, magnitudes2,
-    //     keypoint_features2, src.rows, src.cols, standard_variances[2]);
-    // kp_finder.find_keypoint_orientations(keypoints3, grad_angs3, magnitudes3,
-    //     keypoint_features3, src.rows, src.cols, standard_variances[2]);
-    // kp_finder.find_keypoint_orientations(keypoints4, grad_angs4, magnitudes4,
-    //     keypoint_features4, src.rows, src.cols, standard_variances[2]);
-
-    // if (rank == 0) {
-    //     kp_finder.store_keypoints(keypoint_features1, cv_keypoints, 1, src.cols);
-    //     kp_finder.store_features(keypoint_features1, result_features);
-    // }
+    if (rank == MASTER) {
+        double start_kp_orient_time = CycleTimer::currentSeconds();
+        std::vector<KeypointFeature> keypoint_features1, keypoint_features2, 
+            keypoint_features3, keypoint_features4;
+        kp_finder.find_keypoint_orientations(keypoints1, grad_angs1, 
+            magnitudes1, keypoint_features1, src.rows, src.cols, 
+            standard_variances[2]);
+        kp_finder.find_keypoint_orientations(keypoints2, grad_angs2, 
+            magnitudes2, keypoint_features2, src.rows, src.cols, 
+            standard_variances[2]);
+        kp_finder.find_keypoint_orientations(keypoints3, grad_angs3, 
+            magnitudes3, keypoint_features3, src.rows, src.cols, 
+            standard_variances[2]);
+        kp_finder.find_keypoint_orientations(keypoints4, grad_angs4, 
+            magnitudes4, keypoint_features4, src.rows, src.cols, 
+            standard_variances[2]);
+        double end_kp_orient_time = CycleTimer::currentSeconds();
+        double kp_orient_time = end_kp_orient_time - start_kp_orient_time;
+        printf("orientation finding time: %.3f s\n", kp_orient_time);
+        kp_finder.store_keypoints(keypoint_features1, cv_keypoints, 
+            1, src.cols);
+        kp_finder.store_features(keypoint_features1, result_features);
+    }
 }
  
