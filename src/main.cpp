@@ -65,10 +65,14 @@ int main(int argc, char* argv[]){
     MPI_Request reqs[num_tasks * 2];
     MPI_Status stats[num_tasks * 2];
 
+    double total_time_start = CycleTimer::currentSeconds();
     find_keypoint_features(src1, features1, keypoints1, num_tasks, rank,
         reqs, stats);
     find_keypoint_features(src2, features2, keypoints2, num_tasks, rank,
         reqs, stats);
+    double total_time_end = CycleTimer::currentSeconds();
+    double total_time = total_time_end - total_time_start;
+    printf("Total parallel time: %lf\n", total_time);
 
     //-- Step 3: Matching descriptor vectors using FLANN matcher
     if (rank == MASTER) {
@@ -97,8 +101,6 @@ int main(int argc, char* argv[]){
         }
 
         //-- Draw only "good" matches
-        printf("Found %d, %d keypoints in images 1 and 2\n", 
-            keypoints1.size(), keypoints2.size());
         drawMatches( src1_mat, keypoints1, src2_mat, keypoints2,
             good_matches, res_output, cv::Scalar::all(-1), cv::Scalar::all(-1),
             vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );

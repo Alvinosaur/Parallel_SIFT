@@ -139,8 +139,9 @@ void shrink_mpi(const Image & src, int* result, const range & start_end,
     int total_val;
     int r_offset, c_offset;
     int i, j, k;
+    int r, c, rows = src.rows, cols = src.cols;
     int start = start_end.first, end = start_end.second;
-    int dst_cols = src.cols / scale;
+    int dst_cols = cols / scale;
     int dst_row, dst_col;
     for (k = start; k < end; k++) {
         j = k % dst_cols * scale;
@@ -148,7 +149,9 @@ void shrink_mpi(const Image & src, int* result, const range & start_end,
         total_val = 0;
         for (r_offset = 0; r_offset < scale; r_offset++) {
             for (c_offset = 0; c_offset < scale; c_offset++) {
-                total_val += src.get(i+r_offset, j+c_offset);
+                r = reflect(rows, i+r_offset);
+                c = reflect(cols, j+c_offset);
+                total_val += src.get(r, c);
             }
         }
 
@@ -215,12 +218,12 @@ bool get_args(int argc, char** argv,
                 break;
             case 'g':
                 *gradient_threshold = atof(optarg);
-                if (*gradient_threshold) printf(
+                if (*gradient_threshold && *debug) printf(
                     "Gradient Threshold: %f\n", *gradient_threshold);
                 break;
             case 'f':
                 *intensity_threshold = atof(optarg);
-                if (*intensity_threshold) printf(
+                if (*intensity_threshold && *debug) printf(
                     "Intensity Threshold: %f\n", *intensity_threshold);
                 break;
             default:

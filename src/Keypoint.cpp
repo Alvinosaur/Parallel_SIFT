@@ -167,8 +167,6 @@ void Keypoint::find_corners_gradients(
 		grad_x = next_cp - prev_cp;
 		grad_y = next_rp - prev_rp;
 
-		printf("gradx, grady: %f, %f\n", grad_x, grad_y);
-
 		PointWithAngle newp;
 		newp.angle = rad_to_deg(atan2f(grad_y, grad_x));
 		grad_angs[k] = newp.angle;
@@ -230,12 +228,6 @@ void Keypoint::find_corners_gradients(
 	// make sure other non-blocking communication has finished
 	mpi_barrier(rank, num_tasks, mag_reqs, NULL);
 	mpi_barrier(rank, num_tasks, ang_reqs, NULL);
-
-	// if (rank == MASTER) {
-	// 	for (int i = 0; i < rows * cols; i++) {
-	// 		printf("Mag: %f, Ang: %f\n", magnitudes[i], grad_angs[i]);
-	// 	}
-	// }
 }
 
 int squared_dist(int x, int y) {
