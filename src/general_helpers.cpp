@@ -105,6 +105,13 @@ void send_to_others(int* data, MPI_Request* reqs, int self_rank,
     }
 }
 
+void get_counts(int* counts, MPI_Status* stats, int self_rank, int num_tasks) {
+    for (int task = 0; task < num_tasks; task++) {
+        if (task == self_rank) continue;
+        MPI_Get_count(&stats[task], MPI_INT, &counts[task]);
+    }
+}
+
 void shrink(Image & src, Image & dst, int scale) {
     int total_val;
     int r_offset, c_offset;

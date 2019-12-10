@@ -103,7 +103,7 @@ double Keypoint::find_keypoints(std::vector<Image> & differences,
 	Image kp1_img(rows, cols, kp1);
 	Image kp2_img(rows, cols, kp2);
 	free(kp1);
-	free(kp2);
+	free(kp2); 
 	keypoint_results.push_back(kp1_img);
 	keypoint_results.push_back(kp2_img);
 
@@ -138,42 +138,103 @@ int rad_to_deg(float ang_rad) {
 	return ang_deg;
 }
 
-double Keypoint::find_corners_gradients(
+void Keypoint::find_corners_gradients(
 		const Image & src, std::vector<coord> & keypoints,
-		std::vector<PointWithAngle> & points_with_angle) {
-	double startTime = CycleTimer::currentSeconds();
-	int r, c;
+		int* grad_angs, int* magnitudes) {
+	int r, c, k;
 	// previous and next adjacent pixel values
 	int prev_rp, next_rp, prev_cp, next_cp;
 	int grad_x, grad_y;
 	int rows = src.rows, cols = src.cols;
-	double avg_gradx = 0, avg_grady = 0;
-	int count = 0;
-	for (r = 0; r < rows; r++) {
-		for (c = 0; c < cols; c++) {
-			prev_rp = src.get(reflect(rows, r-1), c);
-			next_rp = src.get(reflect(rows, r+1), c);
-			prev_cp = src.get(r, reflect(cols, c-1));
-			next_cp = src.get(r, reflect(cols, c+1));
-			grad_x = next_cp - prev_cp;
-			grad_y = next_rp - prev_rp;
+	int kp_count = 0;
+	int kp_locs[rows * cols];  // potentially sparse
+	int kp_counts[num_tasks];  // how many keypoints each task sent
 
-			PointWithAngle newp;
-			newp.angle = rad_to_deg(atan2f(grad_y, grad_x));
-			newp.magnitude = grad_x * grad_x + grad_y * grad_y;
-			coord pos(r, c);
-			newp.pos = pos;
-			points_with_angle.push_back(newp);
+	enum msg_id { GRAD=0, MAG=1, KP=2 };
 
-			if (is_corner(abs(grad_x), abs(grad_y))) {
-				coord new_kp(r, c);
-				keypoints.push_back(new_kp);
-			}
+	std::vector<range> assignments;
+	allocate_work_pix_mpi(rows, cols, num_tasks, assignments);
+	int start = assignments[rank].first, end = assignments[rank].second;
+
+	// 2 sets for send/receive magnitudes, 2 sets for angles
+    MPI_Request other_reqs[num_tasks * 4];
+    MPI_Status other_stats[num_tasks * 4];
+
+	// first two sets dedicated to magnitudes
+	MPI_Request* mag_reqs = other_reqs;
+	MPI_Status* mag_stats = other_stats;
+
+	// second set dedicated to angles
+	MPI_Request* ang_reqs = &other_reqs[num_tasks * 2];
+	MPI_Status* ang_stats = &other_stats[num_tasks * 2];
+
+	for (k = start; k < end; k++) {
+		prev_rp = src.get(reflect(rows, r-1), c);
+		next_rp = src.get(reflect(rows, r+1), c);
+		prev_cp = src.get(r, reflect(cols, c-1));
+		next_cp = src.get(r, reflect(cols, c+1));
+		grad_x = next_cp - prev_cp;
+		grad_y = next_rp - prev_rp;
+
+		PointWithAngle newp;
+		newp.angle = rad_to_deg(atan2f(grad_y, grad_x));
+		grad_angs[k] = newp.angle;
+
+		newp.magnitude = grad_x * grad_x + grad_y * grad_y;
+		magnitudes[k] = newp.magnitude;
+
+		if (is_corner(abs(grad_x), abs(grad_y))) {
+			coord new_kp(r, c);
+			keypoints.push_back(new_kp);
+			kp_locs[kp_count++] = r * c;
 		}
 	}
-	double endTime = CycleTimer::currentSeconds();
-    double overallTime = endTime - startTime;
-    return overallTime;
+
+	// transfer all keypoints first so can receive them first without waiting
+	// for other data
+	// tasks will share part of array that contains valid keypoint locations
+	// so not full task assignment range, only up to number of keypoints found
+	range found_kp_range;
+	found_kp_range.first = start;
+	found_kp_range.second = start + kp_count;
+	send_to_others(kp_locs, reqs, rank, found_kp_range, KP, num_tasks);
+
+	// share gradient angles, magnitudes, and keypoint positions
+	send_to_others(magnitudes, mag_reqs, rank, assignments[rank], MAG, 
+		num_tasks);
+    receive_from_others(magnitudes, mag_reqs, assignments, rank, MAG);
+
+	send_to_others(grad_angs, ang_reqs, rank, assignments[rank], GRAD, 
+		num_tasks);
+    receive_from_others(grad_angs, ang_reqs, assignments, rank, GRAD);
+
+	// need to do post-processing on this array
+	range new_range;
+	int max_kp;
+	for (int task = 0; task < num_tasks; task++) {
+        if (task == rank) continue;  // don't need to request from self
+        new_range = assignments[task];
+        max_kp = new_range.second - new_range.first;
+		// Need blocking receive to track the number of items received
+		MPI_Recv(kp_locs, max_kp, MPI_INT, task, KP, MPI_COMM_WORLD,
+            &stats[task]);
+		MPI_Get_count(&stats[task], MPI_INT, &kp_counts[task]);
+
+		// now store all these in local keypoints vector
+		kp_count = kp_counts[task];
+		for (int kp_i = 0; kp_i < kp_count; kp_i++) {
+			// locations of keypoints, stored starting at offset
+			k = kp_locs[new_range.first + kp_i];
+			r = k / cols;
+			c = k % cols;
+			coord pos(r, c);
+			keypoints.push_back(pos);
+		}
+    }
+
+	// make sure other non-blocking communication has finished
+	mpi_barrier(rank, num_tasks, mag_reqs, mag_stats);
+	mpi_barrier(rank, num_tasks, ang_reqs, ang_stats);
 }
 
 int squared_dist(int x, int y) {
@@ -226,7 +287,7 @@ void normalize_vector(float* vec, int N) {
 }
 
 void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
-		std::vector<PointWithAngle> & all_points, 
+		int* grad_angs, int* magnitudes,
 		std::vector<KeypointFeature> & final_keypoints, 
 		int rows, int cols, int size) {
 
@@ -246,7 +307,7 @@ void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
 		weighted_angle_sum = 0;
 		KeypointFeature kp_feature;
 		kp_feature.size = size;
-		kp_feature.magnitude = all_points[row * cols + col].magnitude;
+		kp_feature.magnitude = magnitudes[row * cols + col];
 		float weights[FEATURE_VEC_SIZE] = {0};
 
 		// find gradients of pixels in this region around keypoint
@@ -256,9 +317,9 @@ void Keypoint::find_keypoint_orientations(std::vector<coord> & keypoints,
 				new_c = reflect(cols, col + c_offset);
 				
 				inv_dist = inv_distance_weight(r_offset, c_offset, normalizer);
-				ang = all_points[new_r * cols + new_c].angle;
+				ang = grad_angs[new_r * cols + new_c];
 				ang_bin = ang_to_bin(ang);
-				mag = all_points[new_r * cols + new_c].magnitude;
+				mag = magnitudes[new_r * cols + new_c];
 
 				scale = mag * inv_dist;
 				scaled_ang = scale * ang;

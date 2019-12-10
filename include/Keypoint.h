@@ -51,17 +51,16 @@ public:
 	double find_keypoints(std::vector<Image> & differences, 
 		std::vector<Image> & keypoint_results);
 
-	double find_corners_gradients(const Image & src, 
-		std::vector<coord> & keypoints,
-		std::vector<PointWithAngle> & points_with_angle);
+	void find_corners_gradients(const Image & src, 
+		std::vector<coord> & keypoints, int* grad_angs, int* magnitudes);
 
 	bool is_corner(int grad_x, int grad_y);
 
 	void mark_keypoints(Image & src, std::vector<coord> & keypoints);
 
 	void find_keypoint_orientations(std::vector<coord> & keypoints,
-		std::vector<PointWithAngle> & all_points, 
-		std::vector<KeypointFeature> & keypoints_with_angles, 
+		int* grad_angs, int* magnitudes,
+		std::vector<KeypointFeature> & final_keypoints, 
 		int rows, int cols, int size);
 
 	void store_features(std::vector<KeypointFeature> & kp_features,

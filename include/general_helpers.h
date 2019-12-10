@@ -61,5 +61,6 @@ void send_to_others(int* data, MPI_Request* reqs, int self_rank,
         range self_range, int id, int num_tasks);
 void receive_from_others(int* result, MPI_Request* reqs,
     std::vector<range> & assignments, int self_rank, int id);
+void get_counts(int* counts, MPI_Status* stats, int self_rank, int num_tasks);
 
 #endif
